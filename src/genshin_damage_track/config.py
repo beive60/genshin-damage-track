@@ -13,20 +13,23 @@ VIDEO_FPS = 60
 # Default sampling rate (frames per second to process)
 DEFAULT_SAMPLE_RATE: float = 1.0
 
+# Default DPS averaging interval in frames.
+# At 60 fps this equals a 1-second window.
+DEFAULT_DPS_INTERVAL: int = 60
+
 # Region of interest (ROI) coordinates — placeholder values (require measurement).
 # Format: {"x1": int, "y1": int, "x2": int, "y2": int}
 #
-# Pattern 1: Only party total damage is displayed.
-# Pattern 2: Both individual damage and party total damage are displayed,
-#             together with the character name.
+# Pattern 1: Only cumulative total damage is displayed.
+# Pattern 2: Cumulative total damage is displayed together with up to 4
+#             individual character entries (name, damage, percentage).
 REGIONS: dict[str, dict[str, dict[str, int]]] = {
     "pattern_1": {
-        "party_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0},  # TODO: measure
+        "total_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0},  # TODO: measure
     },
     "pattern_2": {
-        "party_damage":      {"x1": 0, "y1": 0, "x2": 0, "y2": 0},  # TODO: measure
-        "individual_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0},  # TODO: measure
-        "character_name":    {"x1": 0, "y1": 0, "x2": 0, "y2": 0},  # TODO: measure
+        "total_damage":     {"x1": 0, "y1": 0, "x2": 0, "y2": 0},  # TODO: measure
+        "character_list":   {"x1": 0, "y1": 0, "x2": 0, "y2": 0},  # TODO: measure
     },
 }
 

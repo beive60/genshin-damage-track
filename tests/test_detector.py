@@ -37,8 +37,8 @@ class TestDetectPattern:
         # Patch REGIONS to have a valid region so that engine.read is actually called
         from unittest.mock import patch
         valid_regions = {
-            "pattern_1": {"party_damage": {"x1": 100, "y1": 100, "x2": 200, "y2": 200}},
-            "pattern_2": {"party_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0}},
+            "pattern_1": {"total_damage": {"x1": 100, "y1": 100, "x2": 200, "y2": 200}},
+            "pattern_2": {"total_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0}},
         }
         with patch("genshin_damage_track.detector.REGIONS", valid_regions):
             detect_pattern(_frames(50), engine=engine, max_probe_frames=3)
@@ -49,8 +49,8 @@ class TestDetectPattern:
     def test_detects_pattern_1_on_numeric_result(self):
         """When pattern_1 region yields a number, PATTERN_1 is returned."""
         valid_regions = {
-            "pattern_1": {"party_damage": {"x1": 100, "y1": 100, "x2": 200, "y2": 200}},
-            "pattern_2": {"party_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0}},
+            "pattern_1": {"total_damage": {"x1": 100, "y1": 100, "x2": 200, "y2": 200}},
+            "pattern_2": {"total_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0}},
         }
         engine = _make_engine(["12345"])
 
@@ -63,8 +63,8 @@ class TestDetectPattern:
     def test_detects_pattern_2_on_numeric_result(self):
         """When pattern_2 region yields a number (and pattern_1 is placeholder), PATTERN_2 is returned."""
         valid_regions = {
-            "pattern_1": {"party_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0}},
-            "pattern_2": {"party_damage": {"x1": 100, "y1": 100, "x2": 200, "y2": 200}},
+            "pattern_1": {"total_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0}},
+            "pattern_2": {"total_damage": {"x1": 100, "y1": 100, "x2": 200, "y2": 200}},
         }
         engine = _make_engine(["12345"])
 
@@ -76,8 +76,8 @@ class TestDetectPattern:
 
     def test_returns_none_on_exhausted_frames_without_match(self):
         valid_regions = {
-            "pattern_1": {"party_damage": {"x1": 100, "y1": 100, "x2": 200, "y2": 200}},
-            "pattern_2": {"party_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0}},
+            "pattern_1": {"total_damage": {"x1": 100, "y1": 100, "x2": 200, "y2": 200}},
+            "pattern_2": {"total_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0}},
         }
         engine = _make_engine(["no number"] * 10)
 

@@ -1,20 +1,50 @@
 # genshin-damage-track
 
-原神の星辰の幻境コンテンツにおいて、映像ストリームからダメージ数値をリアルタイムで抽出し、時間経過に伴う変化をグラフ化するツールです。
+原神の星辰の幻境コンテンツにおいて、映像ストリームから累計ダメージ数値を OCR で抽出し、ショートターム DPS（秒間ダメージ）を算出・グラフ化するツールです。
 
 ## 機能概要
 
 - FHD (1920×1080) 60fps の動画ファイルから指定レートでフレームをサンプリング
-- 固定座標の関心領域 (ROI) を自動検出し、OCR でダメージ数値を抽出
-- パーティ全体ダメージ（パターン1）または個人＋パーティダメージ（パターン2）を自動判別
+- 固定座標の関心領域 (ROI) を自動検出し、OCR で累計ダメージ数値を抽出
+- 画面に表示される累計ダメージの差分から、フレーム間の与ダメージを算出
+- 移動平均ウィンドウ（デフォルト: 60 フレーム ＝ 60fps 動画で 1 秒間）でショートターム DPS を計算
+- パターン1（合計ダメージのみ）とパターン2（合計＋キャラクター別ダメージ）を自動判別
 - 結果を CSV ファイルおよびグラフ (PNG) として出力
 
 ### パターン
 
-| パターン | パーティダメージ | 個人ダメージ | キャラクター名 |
-|----------|----------------|-------------|--------------|
-| パターン1（パーティのみ） | ✅ | — | — |
-| パターン2（個人＋パーティ） | ✅ | ✅ | ✅ |
+| パターン | 合計ダメージ | キャラクター別ダメージ（最大4人） |
+|----------|-------------|-------------------------------|
+| パターン1（合計のみ） | ✅ | — |
+| パターン2（合計＋個別） | ✅ | ✅（名前・ダメージ・割合） |
+
+#### パターン1 の表示例
+
+```
+合計ダメージ
+1234567
+```
+
+#### パターン2 の表示例
+
+```
+合計ダメージ
+1234567
+
+太郎: 12345 (67%)
+次郎: 678 (12%)
+三郎: 90 (8%)
+四郎: 10 (1%)
+```
+
+### DPS 算出ロジック
+
+ゲーム画面には**累計ダメージ**が表示されます。ツールは以下のように DPS を算出します:
+
+1. 各サンプリングフレームで OCR により累計ダメージを取得
+2. OCR が成功した連続フレーム間のダメージ差分（デルタ）を計算
+3. `DPS = デルタダメージ ÷ 経過時間（秒）`
+4. 設定された平均化区間（デフォルト: 60 フレーム）で移動平均を適用
 
 ## 動作環境
 
@@ -69,6 +99,9 @@ genshin-damage-track run video.mp4
 # サンプリングレートを 2fps に指定
 genshin-damage-track run video.mp4 --fps 2
 
+# DPS 平均化区間を 120 フレーム（60fps 動画で 2 秒窓）に変更
+genshin-damage-track run video.mp4 --dps-interval 120
+
 # CSV ファイルとして出力
 genshin-damage-track run video.mp4 --output result.csv
 
@@ -76,21 +109,22 @@ genshin-damage-track run video.mp4 --output result.csv
 genshin-damage-track run video.mp4 --plot --plot-output graph.png
 
 # すべてのオプションを組み合わせ
-genshin-damage-track run video.mp4 --fps 2 --output result.csv --plot --plot-output graph.png
+genshin-damage-track run video.mp4 --fps 2 --dps-interval 60 --output result.csv --plot --plot-output graph.png
 ```
 
 ### CSV 出力フォーマット
 
 ```csv
-timestamp_sec,party_damage,individual_damage,character_name
-0.0,,,
-1.0,12345,,
-2.0,24680,13500,胡桃
-3.0,,,
+timestamp_sec,dps,delta_damage,total_damage
+1.0,1500.00,1500,1500
+2.0,2000.00,2000,3500
+3.0,1750.00,1750,5250
 ```
 
-- 数値が検出されなかったフレームは空欄（null）で表現されます
-- パターン1 の場合、`individual_damage` と `character_name` は常に空欄です
+- `dps`: 平均化区間内のショートターム DPS (damage/sec)
+- `delta_damage`: 直前の OCR 成功フレームからの差分ダメージ
+- `total_damage`: 画面表示の累計ダメージ
+- OCR が失敗したフレームはスキップされ、次の成功フレームとの差分が計算されます
 
 ## テストの実行
 
@@ -128,7 +162,8 @@ genshin-damage-track/
 │   ├── test_cropper.py
 │   ├── test_recognizer.py
 │   ├── test_parser.py
-│   └── test_detector.py
+│   ├── test_detector.py
+│   └── test_orchestrator.py
 └── fixtures/
     └── samples/
 ```

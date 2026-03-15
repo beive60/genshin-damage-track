@@ -17,11 +17,15 @@ app = typer.Typer(
 def run(
     video: Annotated[Path, typer.Argument(help="Path to the video file (FHD, 60fps).")],
     fps: Annotated[float, typer.Option("--fps", help="Frames to sample per second.")] = 1.0,
+    dps_interval: Annotated[
+        int,
+        typer.Option("--dps-interval", help="DPS averaging window in frames (default: 60)."),
+    ] = 60,
     output: Annotated[
         Optional[Path],
-        typer.Option("--output", "-o", help="Write results to this CSV file."),
+        typer.Option("--output", "-o", help="Write DPS results to this CSV file."),
     ] = None,
-    plot: Annotated[bool, typer.Option("--plot", help="Generate a damage graph.")] = False,
+    plot: Annotated[bool, typer.Option("--plot", help="Generate a DPS graph.")] = False,
     plot_output: Annotated[
         Optional[Path],
         typer.Option("--plot-output", help="Save the graph to this file instead of showing it."),
@@ -36,9 +40,10 @@ def run(
         raise typer.Exit(code=1)
 
     typer.echo(f"Processing {video} at {fps} fps …")
-    result = run_pipeline(video, sample_rate=fps)
+    result = run_pipeline(video, sample_rate=fps, dps_interval=dps_interval)
     typer.echo(f"Pattern detected: {result.pattern.value}")
-    typer.echo(f"Frames processed: {len(result.records)}")
+    typer.echo(f"Frames processed: {len(result.frame_records)}")
+    typer.echo(f"DPS records: {len(result.dps_records)}")
 
     if output is not None:
         write_csv(result, output)

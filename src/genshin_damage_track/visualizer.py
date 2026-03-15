@@ -1,4 +1,4 @@
-"""visualizer — generate damage graphs and CSV output."""
+"""visualizer — generate DPS graphs and CSV output."""
 from __future__ import annotations
 
 import csv
@@ -10,6 +10,8 @@ from genshin_damage_track.models import ExtractionResult, RegionPattern
 def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
     """Write *result* to a CSV file at *output_path*.
 
+    The CSV contains DPS records computed from the cumulative damage deltas.
+
     Parameters
     ----------
     result:
@@ -18,17 +20,17 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
         Destination file path.  Parent directories must exist.
     """
     path = Path(output_path)
-    fieldnames = ["timestamp_sec", "party_damage", "individual_damage", "character_name"]
+    fieldnames = ["timestamp_sec", "dps", "delta_damage", "total_damage"]
 
     with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
-        for rec in result.records:
+        for rec in result.dps_records:
             writer.writerow({
                 "timestamp_sec": rec.timestamp_sec,
-                "party_damage": rec.party_damage if rec.party_damage is not None else "",
-                "individual_damage": rec.individual_damage if rec.individual_damage is not None else "",
-                "character_name": rec.character_name if rec.character_name is not None else "",
+                "dps": f"{rec.dps:.2f}" if rec.dps is not None else "",
+                "delta_damage": rec.delta_damage if rec.delta_damage is not None else "",
+                "total_damage": rec.total_damage if rec.total_damage is not None else "",
             })
 
 
@@ -37,7 +39,7 @@ def plot_damage(
     output_path: str | Path | None = None,
     show: bool = False,
 ) -> None:
-    """Generate a time-series damage graph from *result*.
+    """Generate a DPS time-series graph from *result*.
 
     Parameters
     ----------
@@ -51,26 +53,21 @@ def plot_damage(
     """
     import matplotlib.pyplot as plt  # noqa: PLC0415
 
-    timestamps = [r.timestamp_sec for r in result.records]
-
-    party = [
-        float(r.party_damage) if r.party_damage is not None else float("nan")
-        for r in result.records
+    dps_records = result.dps_records
+    timestamps = [r.timestamp_sec for r in dps_records]
+    dps_values = [
+        r.dps if r.dps is not None else float("nan")
+        for r in dps_records
     ]
 
     fig, ax = plt.subplots(figsize=(12, 5))
-    ax.plot(timestamps, party, label="Party Damage", marker="o", linewidth=1.5)
-
-    if result.pattern == RegionPattern.PATTERN_2:
-        individual = [
-            float(r.individual_damage) if r.individual_damage is not None else float("nan")
-            for r in result.records
-        ]
-        ax.plot(timestamps, individual, label="Individual Damage", marker="s", linewidth=1.5)
+    ax.plot(timestamps, dps_values, label="DPS", marker="o", linewidth=1.5)
 
     ax.set_xlabel("Time (s)")
-    ax.set_ylabel("Damage")
-    ax.set_title("Genshin Impact — Damage over Time")
+    ax.set_ylabel("DPS (damage / sec)")
+    ax.set_title(
+        f"Genshin Impact — Short-term DPS (interval={result.dps_interval} frames)"
+    )
     ax.legend()
     ax.grid(True, alpha=0.3)
 

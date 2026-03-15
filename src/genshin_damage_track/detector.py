@@ -52,8 +52,8 @@ def detect_pattern(
     if engine is None:
         engine = OCREngine()
 
-    p1_bbox = REGIONS["pattern_1"]["party_damage"]
-    p2_bbox = REGIONS["pattern_2"]["party_damage"]
+    p1_bbox = REGIONS["pattern_1"]["total_damage"]
+    p2_bbox = REGIONS["pattern_2"]["total_damage"]
 
     p1_valid_region = _is_valid_region(p1_bbox)
     p2_valid_region = _is_valid_region(p2_bbox)
