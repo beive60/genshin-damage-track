@@ -12,11 +12,13 @@ build/
 
 # Virtual environments
 .venv/
+.venv-build/
 venv/
 env/
 
 # Distribution / packaging
 *.whl
+*.spec
 
 # Test / coverage
 .pytest_cache/
