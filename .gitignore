@@ -25,6 +25,9 @@ env/
 htmlcov/
 coverage.xml
 
+# Debug output
+build.log
+
 # IDE
 .idea/
 *.swp
