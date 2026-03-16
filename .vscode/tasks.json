@@ -28,7 +28,7 @@
         {
             "label": "Build Executable",
             "type": "shell",
-            "command": "uv venv .venv-build; & .venv-build\\Scripts\\activate.ps1; uv pip install .; uv pip install pyinstaller; pyinstaller --onefile --name genshin-damage-track src/genshin_damage_track/main.py",
+            "command": "if (-not (Test-Path .venv-build)) { uv venv .venv-build }; & .venv-build\\Scripts\\activate.ps1; uv pip install .; uv pip install pyinstaller; pyinstaller genshin-damage-track.spec --noconfirm",
             "group": "build",
             "problemMatcher": []
         },

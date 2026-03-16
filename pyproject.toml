@@ -9,8 +9,8 @@ description = "Extract and track damage numbers from Genshin Impact video stream
 requires-python = ">=3.11"
 dependencies = [
     "opencv-python>=4.9",
-    "paddleocr>=2.7",
-    "paddlepaddle>=2.6",
+    "paddleocr>=2.7,<3",
+    "paddlepaddle>=2.6,<3",
     "numpy>=1.26",
     "matplotlib>=3.8",
     "typer>=0.12",
