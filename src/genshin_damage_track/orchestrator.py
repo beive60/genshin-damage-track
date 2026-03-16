@@ -134,7 +134,7 @@ def _extract_frame_record(
         text = engine.read(cropped)
         total_damage = parse_to_numeric(text)
         logger.debug(
-            "Frame t=%.3fs [P1]: OCR=%r → total_damage=%s",
+            "Frame t=%.3fs [P1]: OCR=%r -> total_damage=%s",
             timestamp_sec, text, total_damage,
         )
 
@@ -149,7 +149,7 @@ def _extract_frame_record(
         total_text = engine.read(total_crop)
         total_damage = parse_to_numeric(total_text)
         logger.debug(
-            "Frame t=%.3fs [P2]: OCR=%r → total_damage=%s",
+            "Frame t=%.3fs [P2]: OCR=%r -> total_damage=%s",
             timestamp_sec, total_text, total_damage,
         )
 

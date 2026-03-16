@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -21,7 +22,9 @@ def _configure_logging(verbose: bool) -> None:
     to ``DEBUG``; otherwise only ``INFO`` and above are printed.
     """
     level = logging.DEBUG if verbose else logging.INFO
-    handler = logging.StreamHandler()
+    handler = logging.StreamHandler(
+        stream=open(sys.stdout.fileno(), mode='w', encoding='utf-8', closefd=False),
+    )
     handler.setFormatter(
         logging.Formatter("%(levelname)s [%(name)s] %(message)s"),
     )
@@ -69,7 +72,7 @@ def run(
         typer.echo(f"Error: video file not found: {video}", err=True)
         raise typer.Exit(code=1)
 
-    typer.echo(f"Processing {video} at {fps} fps …")
+    typer.echo(f"Processing {video} at {fps} fps ...")
     result = run_pipeline(
         video, sample_rate=fps, dps_interval=dps_interval, save_crops_dir=save_crops,
     )

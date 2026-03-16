@@ -93,7 +93,7 @@ def parse_to_numeric(text: str) -> int | None:
     digits_only = match.group().replace(",", "")
     try:
         value = int(digits_only)
-        logger.debug("parse_to_numeric: %r → %d", text, value)
+        logger.debug("parse_to_numeric: %r -> %d", text, value)
         return value
     except ValueError:
         logger.debug("parse_to_numeric: int conversion failed for %r", digits_only)
