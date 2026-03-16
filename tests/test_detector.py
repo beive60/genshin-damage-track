@@ -87,3 +87,23 @@ class TestDetectPattern:
             result = detect_pattern(_frames(5), engine=engine)
 
         assert result is None
+
+    def test_prefers_pattern_2_when_both_regions_valid(self):
+        """When both pattern regions are valid and return numbers, PATTERN_2 should win.
+
+        Pattern 2 is checked first because it is more specific (total + characters).
+        If the video uses pattern 2, the total damage ROI is at a different screen
+        position than pattern 1; checking pattern 1 first might pick up
+        character-entry text and lock in the wrong pattern.
+        """
+        both_valid = {
+            "pattern_1": {"total_damage": {"x1": 100, "y1": 300, "x2": 300, "y2": 400}},
+            "pattern_2": {"total_damage": {"x1": 100, "y1": 200, "x2": 300, "y2": 260}},
+        }
+        # On the first frame, pattern 2 is checked first and returns a number
+        engine = _make_engine(["99999"])
+
+        with patch("genshin_damage_track.detector.REGIONS", both_valid):
+            result = detect_pattern(_frames(5), engine=engine)
+
+        assert result == RegionPattern.PATTERN_2

@@ -72,15 +72,11 @@ def detect_pattern(
 
         logger.debug("Probing frame %d (shape=%s)", i, frame.shape)
 
-        if p1_valid_region:
-            crop_p1 = crop_region_of_interest(frame, p1_bbox)
-            text_p1 = engine.read(crop_p1)
-            value_p1 = parse_to_numeric(text_p1)
-            logger.debug("  Pattern 1: OCR=%r → parsed=%s", text_p1, value_p1)
-            if value_p1 is not None:
-                logger.info("Pattern detected: PATTERN_1 at frame %d (value=%d)", i, value_p1)
-                return RegionPattern.PATTERN_1
-
+        # Check PATTERN_2 first — it is the more specific pattern (total +
+        # characters).  The two patterns place the total-damage region at
+        # different Y coordinates, so checking pattern 1 first on a pattern 2
+        # video may pick up character-entry text in the pattern 1 ROI and lock
+        # in the wrong pattern for all subsequent frames.
         if p2_valid_region:
             crop_p2 = crop_region_of_interest(frame, p2_bbox)
             text_p2 = engine.read(crop_p2)
@@ -89,6 +85,15 @@ def detect_pattern(
             if value_p2 is not None:
                 logger.info("Pattern detected: PATTERN_2 at frame %d (value=%d)", i, value_p2)
                 return RegionPattern.PATTERN_2
+
+        if p1_valid_region:
+            crop_p1 = crop_region_of_interest(frame, p1_bbox)
+            text_p1 = engine.read(crop_p1)
+            value_p1 = parse_to_numeric(text_p1)
+            logger.debug("  Pattern 1: OCR=%r → parsed=%s", text_p1, value_p1)
+            if value_p1 is not None:
+                logger.info("Pattern detected: PATTERN_1 at frame %d (value=%d)", i, value_p1)
+                return RegionPattern.PATTERN_1
 
     logger.warning("No pattern detected after %d probe frames", max_probe_frames)
     return None
