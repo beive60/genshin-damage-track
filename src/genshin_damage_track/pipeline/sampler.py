@@ -1,6 +1,7 @@
 """sample_frames — extract frames from a video at a given sample rate."""
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterator
 from pathlib import Path
 from typing import NamedTuple
@@ -9,6 +10,8 @@ import cv2
 import numpy as np
 
 from genshin_damage_track.config import DEFAULT_SAMPLE_RATE, VIDEO_FPS
+
+logger = logging.getLogger(__name__)
 
 
 class SampledFrame(NamedTuple):
@@ -53,8 +56,18 @@ def sample_frames(
 
     try:
         native_fps: float = cap.get(cv2.CAP_PROP_FPS) or VIDEO_FPS
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         frame_interval: int = max(1, round(native_fps / sample_rate))
         frame_index = 0
+
+        logger.debug(
+            "Video opened: %s (resolution=%dx%d, fps=%.2f, total_frames=%d, "
+            "sample_rate=%.2f, frame_interval=%d)",
+            path, width, height, native_fps, total_frames,
+            sample_rate, frame_interval,
+        )
 
         while True:
             ret, frame = cap.read()

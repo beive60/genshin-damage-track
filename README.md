@@ -79,6 +79,31 @@ genshin-damage-track video.mp4 --plot --plot-output graph.png
 genshin-damage-track video.mp4 --fps 2 --dps-interval 60 --output result.csv --plot --plot-output graph.png
 ```
 
+### デバッグ・診断
+
+期待した結果が得られない場合、以下のオプションで詳細情報を取得できます。
+
+```powershell
+# 詳細ログを有効化（OCR 生テキスト、パース結果、ROI 座標等を表示）
+genshin-damage-track video.mp4 --verbose --output result.csv
+
+# クロップ画像を保存して ROI 座標を目視確認
+genshin-damage-track video.mp4 --save-crops ./debug_crops --output result.csv
+
+# 両方を組み合わせてフルデバッグ
+genshin-damage-track video.mp4 -v --save-crops ./debug_crops --output result.csv
+```
+
+`--verbose` (`-v`) を指定すると、以下の情報がログ出力されます:
+
+- **動画メタデータ**: 解像度、FPS、総フレーム数、サンプリング間隔
+- **パターン検出**: 各プローブフレームでの OCR テキストとパース結果
+- **フレーム抽出**: 各フレームの OCR 生テキスト → パース後の数値
+- **ROI クロッピング**: 切り出し座標とサイズ
+- **統計サマリ**: 有効 OCR フレーム数、DPS レコード数
+
+`--save-crops` を指定すると、各フレームの切り出し画像が PNG として保存され、ROI 座標の妥当性を目視確認できます。
+
 ### CSV 出力フォーマット
 
 ```csv

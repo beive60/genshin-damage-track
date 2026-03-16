@@ -15,8 +15,11 @@ common OCR mis-recognition corrections (e.g. "O" → "0", "l" → "1").
 """
 from __future__ import annotations
 
+import logging
 import re
 from typing import NamedTuple
+
+logger = logging.getLogger(__name__)
 
 # OCR mis-recognition correction table.
 # Only uppercase look-alike characters are corrected; lowercase letters such
@@ -84,12 +87,16 @@ def parse_to_numeric(text: str) -> int | None:
     corrected = _apply_corrections(text)
     match = _NUMBER_RE.search(corrected)
     if match is None:
+        logger.debug("parse_to_numeric: no number found in %r (corrected: %r)", text, corrected)
         return None
 
     digits_only = match.group().replace(",", "")
     try:
-        return int(digits_only)
+        value = int(digits_only)
+        logger.debug("parse_to_numeric: %r → %d", text, value)
+        return value
     except ValueError:
+        logger.debug("parse_to_numeric: int conversion failed for %r", digits_only)
         return None
 
 

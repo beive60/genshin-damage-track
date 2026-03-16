@@ -6,8 +6,12 @@ the pipeline.
 """
 from __future__ import annotations
 
+import logging
+
 import cv2
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 def preprocess_for_ocr(cropped: np.ndarray) -> np.ndarray:
@@ -71,6 +75,7 @@ class OCREngine:
             string when *image* is empty or nothing is recognised.
         """
         if image.size == 0:
+            logger.debug("OCR skipped: empty image (size=0)")
             return ""
 
         preprocessed = preprocess_for_ocr(image) if image.ndim == 3 else image
@@ -85,7 +90,9 @@ class OCREngine:
                 for line in page:
                     text: str = line[1][0]
                     lines.append(text)
-        return "\n".join(lines)
+        joined = "\n".join(lines)
+        logger.debug("OCR result (image %dx%d): %r", image.shape[1], image.shape[0], joined)
+        return joined
 
 
 def read_text_from_image(image: np.ndarray, engine: OCREngine | None = None) -> str:

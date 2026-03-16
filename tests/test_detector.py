@@ -1,7 +1,7 @@
 """Tests for detector.py."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -26,8 +26,13 @@ def _frames(count: int = 5):
 class TestDetectPattern:
     def test_returns_none_when_no_valid_region(self):
         """When all REGIONS bboxes are placeholders (zero area), detection yields None."""
+        zero_regions = {
+            "pattern_1": {"total_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0}},
+            "pattern_2": {"total_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0}},
+        }
         engine = _make_engine(["", ""])
-        result = detect_pattern(_frames(2), engine=engine)
+        with patch("genshin_damage_track.detector.REGIONS", zero_regions):
+            result = detect_pattern(_frames(2), engine=engine)
         assert result is None
 
     def test_respects_max_probe_frames(self):
@@ -35,7 +40,6 @@ class TestDetectPattern:
         engine = _make_engine([""] * 100)
 
         # Patch REGIONS to have a valid region so that engine.read is actually called
-        from unittest.mock import patch
         valid_regions = {
             "pattern_1": {"total_damage": {"x1": 100, "y1": 100, "x2": 200, "y2": 200}},
             "pattern_2": {"total_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0}},
@@ -54,7 +58,6 @@ class TestDetectPattern:
         }
         engine = _make_engine(["12345"])
 
-        from unittest.mock import patch
         with patch("genshin_damage_track.detector.REGIONS", valid_regions):
             result = detect_pattern(_frames(5), engine=engine)
 
@@ -68,7 +71,6 @@ class TestDetectPattern:
         }
         engine = _make_engine(["12345"])
 
-        from unittest.mock import patch
         with patch("genshin_damage_track.detector.REGIONS", valid_regions):
             result = detect_pattern(_frames(5), engine=engine)
 
@@ -81,7 +83,6 @@ class TestDetectPattern:
         }
         engine = _make_engine(["no number"] * 10)
 
-        from unittest.mock import patch
         with patch("genshin_damage_track.detector.REGIONS", valid_regions):
             result = detect_pattern(_frames(5), engine=engine)
 
