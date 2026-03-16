@@ -52,39 +52,6 @@
 - **Python**: 3.11 以上
 - **パッケージマネージャ**: [uv](https://docs.astral.sh/uv/)
 
-## セットアップ
-
-### 1. uv のインストール
-
-PowerShell を開き、以下を実行します。
-
-```powershell
-irm https://astral.sh/uv/install.ps1 | iex
-```
-
-インストール後、ターミナルを再起動して `uv` コマンドが使えることを確認します。
-
-```powershell
-uv --version
-```
-
-### 2. リポジトリのクローン
-
-```powershell
-git clone https://github.com/beive60/genshin-damage-track.git
-cd genshin-damage-track
-```
-
-### 3. 仮想環境の作成と依存パッケージのインストール
-
-```powershell
-uv venv
-.venv\Scripts\activate
-uv pip install -e ".[dev]"
-```
-
-> **補足**: `uv venv` は `.venv` ディレクトリに Python 仮想環境を作成します。`.[dev]` を指定することで、テスト用の依存パッケージ（pytest 等）も同時にインストールされます。
-
 ## 使い方
 
 ### 基本実行

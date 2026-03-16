@@ -58,7 +58,7 @@ python -m pytest tests/ -v --cov=genshin_damage_track --cov-report=term-missing
 ### 前提条件
 
 | 項目 | 要件 |
-|------|------|
+| --- | --- |
 | OS | Windows 11 |
 | Python | 3.11+ |
 | パッケージマネージャ | [uv](https://docs.astral.sh/uv/) |
@@ -99,7 +99,7 @@ signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a ".\dist
 ```
 
 | パラメータ | 説明 |
-|-----------|------|
+| --- | --- |
 | `/tr` | RFC 3161 タイムスタンプサーバーの URL |
 | `/td sha256` | タイムスタンプのダイジェストアルゴリズム |
 | `/fd sha256` | ファイルのダイジェストアルゴリズム |
