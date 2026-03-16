@@ -57,26 +57,26 @@
 ### 基本実行
 
 ```powershell
-genshin-damage-track run video.mp4
+genshin-damage-track video.mp4
 ```
 
 ### オプション
 
 ```powershell
 # サンプリングレートを 2fps に指定
-genshin-damage-track run video.mp4 --fps 2
+genshin-damage-track video.mp4 --fps 2
 
 # DPS 平均化区間を 120 フレーム（60fps 動画で 2 秒窓）に変更
-genshin-damage-track run video.mp4 --dps-interval 120
+genshin-damage-track video.mp4 --dps-interval 120
 
 # CSV ファイルとして出力
-genshin-damage-track run video.mp4 --output result.csv
+genshin-damage-track video.mp4 --output result.csv
 
 # グラフを生成して PNG に保存
-genshin-damage-track run video.mp4 --plot --plot-output graph.png
+genshin-damage-track video.mp4 --plot --plot-output graph.png
 
 # すべてのオプションを組み合わせ
-genshin-damage-track run video.mp4 --fps 2 --dps-interval 60 --output result.csv --plot --plot-output graph.png
+genshin-damage-track video.mp4 --fps 2 --dps-interval 60 --output result.csv --plot --plot-output graph.png
 ```
 
 ### CSV 出力フォーマット
