@@ -25,11 +25,11 @@ DEFAULT_DPS_INTERVAL: int = 60
 #             individual character entries (name, damage, percentage).
 REGIONS: dict[str, dict[str, dict[str, int]]] = {
     "pattern_1": {
-        "total_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0},  # TODO: measure
+        "total_damage": {"x1": 153, "y1": 366, "x2": 333, "y2": 395},
     },
     "pattern_2": {
-        "total_damage":     {"x1": 0, "y1": 0, "x2": 0, "y2": 0},  # TODO: measure
-        "character_list":   {"x1": 0, "y1": 0, "x2": 0, "y2": 0},  # TODO: measure
+        "total_damage":     {"x1": 159, "y1": 243, "x2": 328, "y2": 274},
+        "character_list":   {"x1": 45, "y1": 293, "x2": 331, "y2": 395},
     },
 }
 
