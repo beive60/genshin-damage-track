@@ -1,5 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import warnings
+# Suppress harmless third-party warnings during PyInstaller analysis
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=SyntaxWarning)
+warnings.filterwarnings("ignore", message="urllib3.*doesn't match a supported version")
+
 import os, Cython, paddleocr, paddle
 _cython_dir = os.path.dirname(Cython.__file__)
 _paddleocr_dir = os.path.dirname(paddleocr.__file__)
@@ -26,7 +32,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['scipy.special._cdflib', 'tzdata'],
     noarchive=False,
     optimize=0,
 )
