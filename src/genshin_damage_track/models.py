@@ -11,8 +11,8 @@ class RegionPattern(Enum):
     Both patterns display cumulative total damage.
 
     TOTAL_ONLY — total damage only.
-    PER_CHARACTER — total damage **plus** up to 4 individual character entries
-                    (name, damage, percentage).
+    PER_CHARACTER — total damage **plus** up to 4 individual character
+                    cumulative damage values.
     """
 
     TOTAL_ONLY = "total-only"
@@ -23,12 +23,14 @@ class RegionPattern(Enum):
 class CharacterDamage:
     """Individual character damage entry (Pattern 2 only).
 
-    Represents one line such as ``太郎: 12345 (67%)``.
+    ``slot`` is the 0-based position in the on-screen list (0–3).
+    ``name`` is assigned from the CLI ``--names`` option; defaults to
+    ``"char_0"`` … ``"char_3"`` when not provided.
     """
 
+    slot: int
     name: str
     damage: int
-    percentage: float  # e.g. 67.0 for "67%"
 
 
 @dataclass
@@ -61,6 +63,7 @@ class ExtractionResult:
     pattern: RegionPattern
     frame_records: list[FrameRecord] = field(default_factory=list)
     dps_records: list[DpsRecord] = field(default_factory=list)
+    party: list[str] = field(default_factory=list)
     source_file: str = ""
     fps_sample_rate: float = 1.0
     dps_interval: int = 60

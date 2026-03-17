@@ -6,7 +6,7 @@ from pathlib import Path
 
 import cv2
 
-from genshin_damage_track.config import DEFAULT_DPS_INTERVAL, DEFAULT_SAMPLE_RATE, REGIONS
+from genshin_damage_track.config import DEFAULT_DPS_INTERVAL, DEFAULT_SAMPLE_RATE, MAX_CHARACTERS, REGIONS
 from genshin_damage_track.models import (
     CharacterDamage,
     DpsRecord,
@@ -15,7 +15,7 @@ from genshin_damage_track.models import (
     RegionPattern,
 )
 from genshin_damage_track.pipeline.cropper import crop_region_of_interest
-from genshin_damage_track.pipeline.parser import parse_character_entries, parse_to_numeric
+from genshin_damage_track.pipeline.parser import parse_to_numeric
 from genshin_damage_track.pipeline.recognizer import OCREngine
 from genshin_damage_track.pipeline.sampler import sample_frames
 
@@ -29,6 +29,7 @@ def run_pipeline(
     engine: OCREngine | None = None,
     save_crops_dir: str | Path | None = None,
     pattern: RegionPattern = RegionPattern.PER_CHARACTER,
+    character_names: list[str] | None = None,
 ) -> ExtractionResult:
     """Execute the full damage-extraction pipeline on *video_path*.
 
@@ -50,6 +51,10 @@ def run_pipeline(
         visual debugging.  The directory is created if it does not exist.
     pattern:
         The :class:`RegionPattern` to use for extraction.
+    character_names:
+        Optional display names for up to 4 party characters (provided
+        via the ``--names`` CLI option).  When ``None``, slots are named
+        ``"char_0"`` … ``"char_3"``.
 
     Returns
     -------
@@ -60,6 +65,16 @@ def run_pipeline(
     path = Path(video_path)
     if engine is None:
         engine = OCREngine()
+
+    # Build party name list (default to slot labels)
+    default_names = [f"char_{i}" for i in range(MAX_CHARACTERS)]
+    if character_names:
+        party = [
+            character_names[i] if i < len(character_names) else default_names[i]
+            for i in range(MAX_CHARACTERS)
+        ]
+    else:
+        party = list(default_names)
 
     # Prepare crop-saving directory
     crops_dir: Path | None = None
@@ -80,7 +95,7 @@ def run_pipeline(
     for idx, sampled_frame in enumerate(sampled):
         record = _extract_frame_record(
             sampled_frame.timestamp_sec, sampled_frame.image, pattern, engine,
-            crops_dir=crops_dir, frame_index=idx,
+            party=party, crops_dir=crops_dir, frame_index=idx,
         )
         frame_records.append(record)
         if record.total_damage is not None:
@@ -99,6 +114,7 @@ def run_pipeline(
         pattern=pattern,
         frame_records=frame_records,
         dps_records=dps_records,
+        party=party,
         source_file=str(path),
         fps_sample_rate=sample_rate,
         dps_interval=dps_interval,
@@ -111,6 +127,7 @@ def _extract_frame_record(
     pattern: RegionPattern,
     engine: OCREngine,
     *,
+    party: list[str] | None = None,
     crops_dir: Path | None = None,
     frame_index: int = 0,
 ) -> FrameRecord:
@@ -147,22 +164,25 @@ def _extract_frame_record(
             timestamp_sec, total_text, total_damage,
         )
 
-        # Character list (up to 4 entries)
-        char_bbox = REGIONS["pattern_2"]["character_list"]
-        char_crop = crop_region_of_interest(frame, char_bbox)
-        if crops_dir is not None and char_crop.size > 0:
-            cv2.imwrite(
-                str(crops_dir / f"frame_{frame_index:04d}_chars.png"), char_crop,
-            )
-        char_text = engine.read(char_crop)
-        for entry in parse_character_entries(char_text):
-            characters.append(
-                CharacterDamage(
-                    name=entry.name,
-                    damage=entry.damage,
-                    percentage=entry.percentage,
+        # Per-character damage — one dedicated region per slot
+        names = party or [f"char_{i}" for i in range(MAX_CHARACTERS)]
+        for slot in range(MAX_CHARACTERS):
+            region_key = f"char_{slot}_damage"
+            char_bbox = REGIONS["pattern_2"].get(region_key)
+            if char_bbox is None:
+                continue
+            char_crop = crop_region_of_interest(frame, char_bbox)
+            if crops_dir is not None and char_crop.size > 0:
+                cv2.imwrite(
+                    str(crops_dir / f"frame_{frame_index:04d}_char_{slot}.png"),
+                    char_crop,
                 )
-            )
+            char_text = engine.read(char_crop)
+            damage = parse_to_numeric(char_text)
+            if damage is not None:
+                characters.append(
+                    CharacterDamage(slot=slot, name=names[slot], damage=damage),
+                )
         if characters:
             logger.debug(
                 "Frame t=%.3fs [P2]: %d character entries parsed",

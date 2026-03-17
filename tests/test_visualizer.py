@@ -25,13 +25,14 @@ class TestWriteCsv:
         rows = list(csv.DictReader(out.open(encoding="utf-8")))
         assert list(rows[0].keys()) == ["timestamp_sec", "dps", "delta_damage", "total_damage"]
 
-    def test_per_character_includes_char_columns(self, tmp_path):
+    def test_per_character_columns_use_party_names(self, tmp_path):
         chars = [
-            CharacterDamage(name="太郎", damage=800, percentage=80.0),
-            CharacterDamage(name="次郎", damage=200, percentage=20.0),
+            CharacterDamage(slot=0, name="胡桃", damage=800),
+            CharacterDamage(slot=1, name="鍾離", damage=200),
         ]
         result = ExtractionResult(
             pattern=RegionPattern.PER_CHARACTER,
+            party=["胡桃", "鍾離"],
             dps_records=[
                 DpsRecord(
                     timestamp_sec=1.0, dps=1000.0, delta_damage=1000,
@@ -43,14 +44,14 @@ class TestWriteCsv:
         write_csv(result, out)
         rows = list(csv.DictReader(out.open(encoding="utf-8")))
         assert len(rows) == 1
-        assert rows[0]["char1_name"] == "太郎"
-        assert rows[0]["char1_damage"] == "800"
-        assert rows[0]["char1_pct"] == "80.0"
-        assert rows[0]["char2_name"] == "次郎"
-        assert rows[0]["char2_damage"] == "200"
-        assert rows[0]["char2_pct"] == "20.0"
+        assert rows[0]["胡桃_damage"] == "800"
+        assert rows[0]["胡桃_pct"] == "80.0"  # 800/1000*100
+        assert rows[0]["鍾離_damage"] == "200"
+        assert rows[0]["鍾離_pct"] == "20.0"  # 200/1000*100
+        # No char{N}_name columns
+        assert "char1_name" not in rows[0]
 
-    def test_per_character_empty_characters_no_extra_columns(self, tmp_path):
+    def test_empty_party_no_extra_columns(self, tmp_path):
         result = ExtractionResult(
             pattern=RegionPattern.PER_CHARACTER,
             dps_records=[
@@ -62,21 +63,22 @@ class TestWriteCsv:
         rows = list(csv.DictReader(out.open(encoding="utf-8")))
         assert list(rows[0].keys()) == ["timestamp_sec", "dps", "delta_damage", "total_damage"]
 
-    def test_varying_character_count_pads_columns(self, tmp_path):
+    def test_missing_character_in_frame_gets_empty_values(self, tmp_path):
         result = ExtractionResult(
             pattern=RegionPattern.PER_CHARACTER,
+            party=["胡桃", "鍾離"],
             dps_records=[
                 DpsRecord(
                     timestamp_sec=1.0, dps=1000.0, delta_damage=1000,
                     total_damage=1000,
-                    characters=[CharacterDamage(name="太郎", damage=1000, percentage=100.0)],
+                    characters=[CharacterDamage(slot=0, name="胡桃", damage=1000)],
                 ),
                 DpsRecord(
                     timestamp_sec=2.0, dps=1500.0, delta_damage=2000,
                     total_damage=3000,
                     characters=[
-                        CharacterDamage(name="太郎", damage=1800, percentage=60.0),
-                        CharacterDamage(name="次郎", damage=1200, percentage=40.0),
+                        CharacterDamage(slot=0, name="胡桃", damage=1800),
+                        CharacterDamage(slot=1, name="鍾離", damage=1200),
                     ],
                 ),
             ],
@@ -84,8 +86,9 @@ class TestWriteCsv:
         out = tmp_path / "out.csv"
         write_csv(result, out)
         rows = list(csv.DictReader(out.open(encoding="utf-8")))
-        # Max 2 characters → 2 sets of char columns
-        assert "char2_name" in rows[0]
-        # First row only has 1 character; char2 fields should be empty
-        assert rows[0]["char2_name"] == ""
-        assert rows[1]["char2_name"] == "次郎"
+        # First row: 鍾離 not present → empty
+        assert rows[0]["鍾離_damage"] == ""
+        assert rows[0]["鍾離_pct"] == ""
+        # Second row: both present
+        assert rows[1]["鍾離_damage"] == "1200"
+        assert rows[1]["胡桃_damage"] == "1800"

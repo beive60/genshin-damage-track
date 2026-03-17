@@ -70,6 +70,13 @@ def run(
             help="Region pattern to use: 'total-only' (total damage only) or 'per-character' (total + per-character breakdown).",
         ),
     ] = RegionPattern.PER_CHARACTER.value,
+    names: Annotated[
+        Optional[list[str]],
+        typer.Option(
+            "--names",
+            help="Character names for each slot (up to 4). Example: --names 胡桃 --names 夜蘭 --names 鍾離 --names ベネット",
+        ),
+    ] = None,
 ) -> None:
     """Extract damage data from VIDEO and optionally output CSV / graph."""
     from genshin_damage_track.orchestrator import run_pipeline
@@ -91,7 +98,7 @@ def run(
     typer.echo(f"Processing {video} at {fps} fps ...")
     result = run_pipeline(
         video, sample_rate=fps, dps_interval=dps_interval, save_crops_dir=save_crops,
-        pattern=region_pattern,
+        pattern=region_pattern, character_names=names,
     )
     typer.echo(f"Pattern: {result.pattern.value}")
     typer.echo(f"Frames processed: {len(result.frame_records)}")

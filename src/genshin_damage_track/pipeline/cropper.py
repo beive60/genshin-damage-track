@@ -11,6 +11,36 @@ logger = logging.getLogger(__name__)
 BoundingBox = dict[str, int]
 
 
+def split_bbox_rows(bbox: BoundingBox, n: int) -> list[BoundingBox]:
+    """Divide *bbox* into *n* equal-height horizontal strips.
+
+    Parameters
+    ----------
+    bbox:
+        Bounding box to split.
+    n:
+        Number of rows (must be >= 1).
+
+    Returns
+    -------
+    list[BoundingBox]
+        *n* bounding boxes stacked vertically.
+    """
+    if n < 1:
+        raise ValueError(f"n must be >= 1, got {n}")
+
+    x1, y1, x2, y2 = bbox["x1"], bbox["y1"], bbox["x2"], bbox["y2"]
+    total_h = y2 - y1
+    row_h = total_h / n
+
+    rows: list[BoundingBox] = []
+    for i in range(n):
+        ry1 = y1 + round(row_h * i)
+        ry2 = y1 + round(row_h * (i + 1))
+        rows.append({"x1": x1, "y1": ry1, "x2": x2, "y2": ry2})
+    return rows
+
+
 def crop_region_of_interest(
     frame: np.ndarray,
     bbox: BoundingBox,

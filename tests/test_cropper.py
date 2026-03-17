@@ -4,7 +4,42 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from genshin_damage_track.pipeline.cropper import crop_region_of_interest
+from genshin_damage_track.pipeline.cropper import crop_region_of_interest, split_bbox_rows
+
+
+class TestSplitBboxRows:
+    def test_split_into_4_rows(self):
+        bbox = {"x1": 45, "y1": 293, "x2": 331, "y2": 395}
+        rows = split_bbox_rows(bbox, 4)
+        assert len(rows) == 4
+        # All rows share the same x range
+        for r in rows:
+            assert r["x1"] == 45
+            assert r["x2"] == 331
+        # First row starts at y1, last row ends at y2
+        assert rows[0]["y1"] == 293
+        assert rows[-1]["y2"] == 395
+        # Rows are contiguous (no gaps, no overlap)
+        for i in range(len(rows) - 1):
+            assert rows[i]["y2"] == rows[i + 1]["y1"]
+
+    def test_split_single_row(self):
+        bbox = {"x1": 0, "y1": 0, "x2": 100, "y2": 50}
+        rows = split_bbox_rows(bbox, 1)
+        assert len(rows) == 1
+        assert rows[0] == bbox
+
+    def test_split_two_rows(self):
+        bbox = {"x1": 10, "y1": 0, "x2": 200, "y2": 100}
+        rows = split_bbox_rows(bbox, 2)
+        assert len(rows) == 2
+        assert rows[0] == {"x1": 10, "y1": 0, "x2": 200, "y2": 50}
+        assert rows[1] == {"x1": 10, "y1": 50, "x2": 200, "y2": 100}
+
+    def test_invalid_n_raises(self):
+        bbox = {"x1": 0, "y1": 0, "x2": 100, "y2": 100}
+        with pytest.raises(ValueError, match="n must be >= 1"):
+            split_bbox_rows(bbox, 0)
 
 
 class TestCropRegionOfInterest:

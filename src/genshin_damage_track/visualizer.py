@@ -11,7 +11,9 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
     """Write *result* to a CSV file at *output_path*.
 
     The CSV contains DPS records computed from the cumulative damage deltas.
-    When the pattern is ``PER_CHARACTER``, per-character columns are appended.
+    When the pattern is ``PER_CHARACTER`` and a party has been resolved,
+    per-character columns are appended using the party member names
+    (e.g. ``胡桃_damage``, ``胡桃_pct``).
 
     Parameters
     ----------
@@ -21,21 +23,11 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
         Destination file path.  Parent directories must exist.
     """
     path = Path(output_path)
-    is_per_char = result.pattern == RegionPattern.PER_CHARACTER
-
-    # Determine the maximum number of characters across all records
-    max_chars = 0
-    if is_per_char:
-        max_chars = max(
-            (len(rec.characters) for rec in result.dps_records),
-            default=0,
-        )
+    party = result.party
 
     fieldnames = ["timestamp_sec", "dps", "delta_damage", "total_damage"]
-    for i in range(1, max_chars + 1):
-        fieldnames.extend([
-            f"char{i}_name", f"char{i}_damage", f"char{i}_pct",
-        ])
+    for name in party:
+        fieldnames.extend([f"{name}_damage", f"{name}_pct"])
 
     with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
@@ -47,10 +39,19 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
                 "delta_damage": rec.delta_damage if rec.delta_damage is not None else "",
                 "total_damage": rec.total_damage if rec.total_damage is not None else "",
             }
-            for i, ch in enumerate(rec.characters, start=1):
-                row[f"char{i}_name"] = ch.name
-                row[f"char{i}_damage"] = ch.damage
-                row[f"char{i}_pct"] = f"{ch.percentage:.1f}"
+            # Map characters by name
+            char_map = {ch.name: ch for ch in rec.characters}
+            for name in party:
+                ch = char_map.get(name)
+                if ch is not None:
+                    row[f"{name}_damage"] = ch.damage
+                    if rec.total_damage and rec.total_damage > 0:
+                        row[f"{name}_pct"] = f"{ch.damage / rec.total_damage * 100:.1f}"
+                    else:
+                        row[f"{name}_pct"] = ""
+                else:
+                    row[f"{name}_damage"] = ""
+                    row[f"{name}_pct"] = ""
             writer.writerow(row)
 
 
