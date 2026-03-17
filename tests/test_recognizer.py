@@ -18,12 +18,17 @@ class TestPreprocessForOcr:
     def test_output_is_single_channel(self):
         image = np.full((100, 200, 3), 128, dtype=np.uint8)
         result = preprocess_for_ocr(image)
-        assert result.ndim == 2  # single-channel binary image
+        assert result.ndim == 2  # single-channel grayscale image
 
-    def test_output_shape_matches_input(self):
+    def test_output_shape_upscaled(self):
         image = np.random.randint(0, 255, (80, 160, 3), dtype=np.uint8)
         result = preprocess_for_ocr(image)
-        assert result.shape == (80, 160)
+        assert result.shape == (80 * 3, 160 * 3)  # default 3x upscale
+
+    def test_custom_scale_factor(self):
+        image = np.random.randint(0, 255, (50, 100, 3), dtype=np.uint8)
+        result = preprocess_for_ocr(image, scale_factor=2)
+        assert result.shape == (100, 200)
 
 
 def _make_ocr_result(text: str):

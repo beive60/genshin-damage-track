@@ -7,7 +7,6 @@ from pathlib import Path
 import cv2
 
 from genshin_damage_track.config import DEFAULT_DPS_INTERVAL, DEFAULT_SAMPLE_RATE, REGIONS
-from genshin_damage_track.detector import detect_pattern
 from genshin_damage_track.models import (
     CharacterDamage,
     DpsRecord,
@@ -29,6 +28,7 @@ def run_pipeline(
     dps_interval: int = DEFAULT_DPS_INTERVAL,
     engine: OCREngine | None = None,
     save_crops_dir: str | Path | None = None,
+    pattern: RegionPattern = RegionPattern.PER_CHARACTER,
 ) -> ExtractionResult:
     """Execute the full damage-extraction pipeline on *video_path*.
 
@@ -48,6 +48,8 @@ def run_pipeline(
     save_crops_dir:
         When provided, cropped ROI images are saved to this directory for
         visual debugging.  The directory is created if it does not exist.
+    pattern:
+        The :class:`RegionPattern` to use for extraction.
 
     Returns
     -------
@@ -66,18 +68,10 @@ def run_pipeline(
         crops_dir.mkdir(parents=True, exist_ok=True)
         logger.info("Saving cropped ROI images to %s", crops_dir)
 
-    # --- Phase 1: detect the active pattern --------------------------------
+    # --- Phase 1: sample frames -------------------------------------------
     sampled = list(sample_frames(path, sample_rate=sample_rate))
     logger.info("Sampled %d frames from %s", len(sampled), path)
-    frame_iter = (sf.image for sf in sampled)
-    pattern = detect_pattern(frame_iter, engine=engine)
-
-    # Default to PATTERN_1 when auto-detection fails (no numeric region found)
-    if pattern is None:
-        logger.warning("Auto-detection failed; defaulting to PATTERN_1")
-        pattern = RegionPattern.PATTERN_1
-    else:
-        logger.info("Using pattern: %s", pattern.value)
+    logger.info("Using pattern: %s", pattern.value)
 
     # --- Phase 2: extract per-frame cumulative records ---------------------
     frame_records: list[FrameRecord] = []
@@ -124,7 +118,7 @@ def _extract_frame_record(
     total_damage: int | None = None
     characters: list[CharacterDamage] = []
 
-    if pattern == RegionPattern.PATTERN_1:
+    if pattern == RegionPattern.TOTAL_ONLY:
         bbox = REGIONS["pattern_1"]["total_damage"]
         cropped = crop_region_of_interest(frame, bbox)
         if crops_dir is not None and cropped.size > 0:
@@ -138,7 +132,7 @@ def _extract_frame_record(
             timestamp_sec, text, total_damage,
         )
 
-    elif pattern == RegionPattern.PATTERN_2:
+    elif pattern == RegionPattern.PER_CHARACTER:
         # Total cumulative damage
         total_bbox = REGIONS["pattern_2"]["total_damage"]
         total_crop = crop_region_of_interest(frame, total_bbox)
@@ -223,6 +217,7 @@ def compute_dps(
                         dps=dps,
                         delta_damage=delta,
                         total_damage=rec.total_damage,
+                        characters=list(rec.characters),
                     ))
             prev_ts = rec.timestamp_sec
             prev_dmg = rec.total_damage
@@ -241,6 +236,7 @@ def compute_dps(
             dps=avg_dps,
             delta_damage=entry.delta_damage,
             total_damage=entry.total_damage,
+            characters=entry.characters,
         ))
 
     return averaged

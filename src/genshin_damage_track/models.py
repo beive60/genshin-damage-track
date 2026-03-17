@@ -6,17 +6,17 @@ from enum import Enum
 
 
 class RegionPattern(Enum):
-    """Detected region pattern type.
+    """Region pattern type.
 
     Both patterns display cumulative total damage.
 
-    PATTERN_1 — total damage only.
-    PATTERN_2 — total damage **plus** up to 4 individual character entries
-                (name, damage, percentage).
+    TOTAL_ONLY — total damage only.
+    PER_CHARACTER — total damage **plus** up to 4 individual character entries
+                    (name, damage, percentage).
     """
 
-    PATTERN_1 = "total_only"
-    PATTERN_2 = "total_and_characters"
+    TOTAL_ONLY = "total-only"
+    PER_CHARACTER = "per-character"
 
 
 @dataclass
@@ -51,6 +51,7 @@ class DpsRecord:
     dps: float | None
     delta_damage: int | None  # damage dealt since previous successful read
     total_damage: int | None  # cumulative total at this point
+    characters: list[CharacterDamage] = field(default_factory=list)
 
 
 @dataclass

@@ -61,10 +61,10 @@ class TestDetectPattern:
         with patch("genshin_damage_track.detector.REGIONS", valid_regions):
             result = detect_pattern(_frames(5), engine=engine)
 
-        assert result == RegionPattern.PATTERN_1
+        assert result == RegionPattern.TOTAL_ONLY
 
     def test_detects_pattern_2_on_numeric_result(self):
-        """When pattern_2 region yields a number (and pattern_1 is placeholder), PATTERN_2 is returned."""
+        """When pattern_2 region yields a number (and pattern_1 is placeholder), PER_CHARACTER is returned."""
         valid_regions = {
             "pattern_1": {"total_damage": {"x1": 0, "y1": 0, "x2": 0, "y2": 0}},
             "pattern_2": {"total_damage": {"x1": 100, "y1": 100, "x2": 200, "y2": 200}},
@@ -74,7 +74,7 @@ class TestDetectPattern:
         with patch("genshin_damage_track.detector.REGIONS", valid_regions):
             result = detect_pattern(_frames(5), engine=engine)
 
-        assert result == RegionPattern.PATTERN_2
+        assert result == RegionPattern.PER_CHARACTER
 
     def test_returns_none_on_exhausted_frames_without_match(self):
         valid_regions = {
@@ -89,7 +89,7 @@ class TestDetectPattern:
         assert result is None
 
     def test_prefers_pattern_2_when_both_regions_valid(self):
-        """When both pattern regions are valid and return numbers, PATTERN_2 should win.
+        """When both pattern regions are valid and return numbers, PER_CHARACTER should win.
 
         Pattern 2 is checked first because it is more specific (total + characters).
         If the video uses pattern 2, the total damage ROI is at a different screen
@@ -106,4 +106,4 @@ class TestDetectPattern:
         with patch("genshin_damage_track.detector.REGIONS", both_valid):
             result = detect_pattern(_frames(5), engine=engine)
 
-        assert result == RegionPattern.PATTERN_2
+        assert result == RegionPattern.PER_CHARACTER

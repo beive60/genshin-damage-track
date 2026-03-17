@@ -8,6 +8,8 @@ from typing import Annotated, Optional
 
 import typer
 
+from genshin_damage_track.models import RegionPattern
+
 app = typer.Typer(
     name="genshin-damage-track",
     help="Extract and track damage numbers from Genshin Impact video files.",
@@ -61,6 +63,13 @@ def run(
             help="Save cropped ROI images to this directory for visual inspection.",
         ),
     ] = None,
+    pattern: Annotated[
+        str,
+        typer.Option(
+            "--pattern",
+            help="Region pattern to use: 'total-only' (total damage only) or 'per-character' (total + per-character breakdown).",
+        ),
+    ] = RegionPattern.PER_CHARACTER.value,
 ) -> None:
     """Extract damage data from VIDEO and optionally output CSV / graph."""
     from genshin_damage_track.orchestrator import run_pipeline
@@ -72,11 +81,19 @@ def run(
         typer.echo(f"Error: video file not found: {video}", err=True)
         raise typer.Exit(code=1)
 
+    try:
+        region_pattern = RegionPattern(pattern)
+    except ValueError:
+        valid = ", ".join(p.value for p in RegionPattern)
+        typer.echo(f"Error: invalid pattern '{pattern}'. Choose from: {valid}", err=True)
+        raise typer.Exit(code=1)
+
     typer.echo(f"Processing {video} at {fps} fps ...")
     result = run_pipeline(
         video, sample_rate=fps, dps_interval=dps_interval, save_crops_dir=save_crops,
+        pattern=region_pattern,
     )
-    typer.echo(f"Pattern detected: {result.pattern.value}")
+    typer.echo(f"Pattern: {result.pattern.value}")
     typer.echo(f"Frames processed: {len(result.frame_records)}")
     typer.echo(f"DPS records: {len(result.dps_records)}")
 

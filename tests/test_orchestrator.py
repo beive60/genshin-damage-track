@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from genshin_damage_track.models import FrameRecord
+from genshin_damage_track.models import CharacterDamage, FrameRecord
 from genshin_damage_track.orchestrator import compute_dps
 
 
@@ -94,3 +94,32 @@ class TestComputeDps:
         result = compute_dps(records, dps_interval=1)
         # Zero time delta records are skipped (no meaningful DPS)
         assert result == []
+
+    def test_characters_propagated_to_dps_records(self):
+        chars = [CharacterDamage(name="太郎", damage=800, percentage=80.0)]
+        records = [
+            FrameRecord(timestamp_sec=0.0, total_damage=0),
+            FrameRecord(timestamp_sec=1.0, total_damage=1000, characters=chars),
+        ]
+        result = compute_dps(records, dps_interval=1)
+        assert len(result) == 1
+        assert len(result[0].characters) == 1
+        assert result[0].characters[0].name == "太郎"
+        assert result[0].characters[0].damage == 800
+
+    def test_characters_propagated_through_moving_average(self):
+        chars_a = [CharacterDamage(name="太郎", damage=500, percentage=50.0)]
+        chars_b = [
+            CharacterDamage(name="太郎", damage=1200, percentage=60.0),
+            CharacterDamage(name="次郎", damage=800, percentage=40.0),
+        ]
+        records = [
+            FrameRecord(timestamp_sec=0.0, total_damage=0),
+            FrameRecord(timestamp_sec=1.0, total_damage=1000, characters=chars_a),
+            FrameRecord(timestamp_sec=2.0, total_damage=3000, characters=chars_b),
+        ]
+        result = compute_dps(records, dps_interval=2)
+        assert len(result) == 2
+        # Each DPS record keeps the characters from its source frame
+        assert result[0].characters == chars_a
+        assert result[1].characters == chars_b

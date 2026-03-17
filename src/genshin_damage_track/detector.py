@@ -83,8 +83,8 @@ def detect_pattern(
             value_p2 = parse_to_numeric(text_p2)
             logger.debug("  Pattern 2: OCR=%r -> parsed=%s", text_p2, value_p2)
             if value_p2 is not None:
-                logger.info("Pattern detected: PATTERN_2 at frame %d (value=%d)", i, value_p2)
-                return RegionPattern.PATTERN_2
+                logger.info("Pattern detected: PER_CHARACTER at frame %d (value=%d)", i, value_p2)
+                return RegionPattern.PER_CHARACTER
 
         if p1_valid_region:
             crop_p1 = crop_region_of_interest(frame, p1_bbox)
@@ -92,8 +92,8 @@ def detect_pattern(
             value_p1 = parse_to_numeric(text_p1)
             logger.debug("  Pattern 1: OCR=%r -> parsed=%s", text_p1, value_p1)
             if value_p1 is not None:
-                logger.info("Pattern detected: PATTERN_1 at frame %d (value=%d)", i, value_p1)
-                return RegionPattern.PATTERN_1
+                logger.info("Pattern detected: TOTAL_ONLY at frame %d (value=%d)", i, value_p1)
+                return RegionPattern.TOTAL_ONLY
 
     logger.warning("No pattern detected after %d probe frames", max_probe_frames)
     return None

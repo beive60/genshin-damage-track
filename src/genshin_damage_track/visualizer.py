@@ -11,6 +11,7 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
     """Write *result* to a CSV file at *output_path*.
 
     The CSV contains DPS records computed from the cumulative damage deltas.
+    When the pattern is ``PER_CHARACTER``, per-character columns are appended.
 
     Parameters
     ----------
@@ -20,18 +21,37 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
         Destination file path.  Parent directories must exist.
     """
     path = Path(output_path)
+    is_per_char = result.pattern == RegionPattern.PER_CHARACTER
+
+    # Determine the maximum number of characters across all records
+    max_chars = 0
+    if is_per_char:
+        max_chars = max(
+            (len(rec.characters) for rec in result.dps_records),
+            default=0,
+        )
+
     fieldnames = ["timestamp_sec", "dps", "delta_damage", "total_damage"]
+    for i in range(1, max_chars + 1):
+        fieldnames.extend([
+            f"char{i}_name", f"char{i}_damage", f"char{i}_pct",
+        ])
 
     with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
         for rec in result.dps_records:
-            writer.writerow({
+            row: dict[str, object] = {
                 "timestamp_sec": rec.timestamp_sec,
                 "dps": f"{rec.dps:.2f}" if rec.dps is not None else "",
                 "delta_damage": rec.delta_damage if rec.delta_damage is not None else "",
                 "total_damage": rec.total_damage if rec.total_damage is not None else "",
-            })
+            }
+            for i, ch in enumerate(rec.characters, start=1):
+                row[f"char{i}_name"] = ch.name
+                row[f"char{i}_damage"] = ch.damage
+                row[f"char{i}_pct"] = f"{ch.percentage:.1f}"
+            writer.writerow(row)
 
 
 def plot_damage(

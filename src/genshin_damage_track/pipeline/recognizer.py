@@ -14,32 +14,35 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-def preprocess_for_ocr(cropped: np.ndarray) -> np.ndarray:
-    """Improve OCR accuracy with grayscale conversion, binarisation and noise removal.
+def preprocess_for_ocr(cropped: np.ndarray, scale_factor: int = 3) -> np.ndarray:
+    """Improve OCR accuracy by upscaling and converting to grayscale.
+
+    Small ROI crops (e.g. 169×31 px) often fail PaddleOCR's text detector
+    because the character strokes are too thin.  Upscaling by *scale_factor*
+    before recognition significantly improves detection rates.
 
     Parameters
     ----------
     cropped:
         BGR image array of the region of interest.
+    scale_factor:
+        Integer multiplier for width and height (default 3).
 
     Returns
     -------
     np.ndarray
-        Pre-processed single-channel binary image.
+        Pre-processed single-channel grayscale image.
     """
     if cropped.size == 0:
         return cropped
 
-    gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
-    binary = cv2.adaptiveThreshold(
-        gray, 255,
-        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv2.THRESH_BINARY,
-        11, 2,
+    upscaled = cv2.resize(
+        cropped, None,
+        fx=scale_factor, fy=scale_factor,
+        interpolation=cv2.INTER_CUBIC,
     )
-    kernel = np.ones((2, 2), np.uint8)
-    cleaned = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
-    return cleaned
+    gray = cv2.cvtColor(upscaled, cv2.COLOR_BGR2GRAY)
+    return gray
 
 
 class OCREngine:
