@@ -8,7 +8,7 @@
 - 固定座標の関心領域 (ROI) を自動検出し、OCR で累計ダメージ数値を抽出
 - 画面に表示される累計ダメージの差分から、フレーム間の与ダメージを算出
 - 移動平均ウィンドウ（デフォルト: 60 フレーム ＝ 60fps 動画で 1 秒間）でショートターム DPS を計算
-- パターン1（合計ダメージのみ）とパターン2（合計＋キャラクター別ダメージ）を自動判別
+- パターン1（合計ダメージのみ: `total-only`）とパターン2（合計＋キャラクター別ダメージ: `per-character`）を `--pattern` オプションで指定可能（デフォルト: `per-character`）
 - 結果を CSV ファイルおよびグラフ (PNG) として出力
 
 ### パターン
@@ -63,6 +63,10 @@ genshin-damage-track video.mp4
 ### オプション
 
 ```powershell
+# パターンを明示的に指定（デフォルト: per-character）
+genshin-damage-track video.mp4 --pattern total-only
+genshin-damage-track video.mp4 --pattern per-character
+
 # サンプリングレートを 2fps に指定
 genshin-damage-track video.mp4 --fps 2
 
@@ -97,7 +101,7 @@ genshin-damage-track video.mp4 -v --save-crops ./debug_crops --output result.csv
 `--verbose` (`-v`) を指定すると、以下の情報がログ出力されます:
 
 - **動画メタデータ**: 解像度、FPS、総フレーム数、サンプリング間隔
-- **パターン検出**: 各プローブフレームでの OCR テキストとパース結果
+- **パターン検出**: 使用中のパターン設定
 - **フレーム抽出**: 各フレームの OCR 生テキスト → パース後の数値
 - **ROI クロッピング**: 切り出し座標とサイズ
 - **統計サマリ**: 有効 OCR フレーム数、DPS レコード数
