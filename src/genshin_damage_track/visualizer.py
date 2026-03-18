@@ -27,7 +27,7 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
 
     fieldnames = ["timestamp_sec", "dps", "delta_damage", "total_damage"]
     for name in party:
-        fieldnames.extend([f"{name}_damage", f"{name}_pct"])
+        fieldnames.extend([f"{name}_damage", f"{name}_dps", f"{name}_pct"])
 
     with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
@@ -46,11 +46,15 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
                 if ch is not None:
                     row[f"{name}_damage"] = ch.damage
                     if rec.total_damage and rec.total_damage > 0:
-                        row[f"{name}_pct"] = f"{ch.damage / rec.total_damage * 100:.1f}"
+                        pct = ch.damage / rec.total_damage
+                        row[f"{name}_pct"] = f"{pct * 100:.1f}"
+                        row[f"{name}_dps"] = f"{rec.dps * pct:.2f}" if rec.dps is not None else ""
                     else:
                         row[f"{name}_pct"] = ""
+                        row[f"{name}_dps"] = ""
                 else:
                     row[f"{name}_damage"] = ""
+                    row[f"{name}_dps"] = ""
                     row[f"{name}_pct"] = ""
             writer.writerow(row)
 

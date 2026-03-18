@@ -45,8 +45,10 @@ class TestWriteCsv:
         rows = list(csv.DictReader(out.open(encoding="utf-8")))
         assert len(rows) == 1
         assert rows[0]["胡桃_damage"] == "800"
+        assert rows[0]["胡桃_dps"] == "800.00"  # 1000 * 0.8
         assert rows[0]["胡桃_pct"] == "80.0"  # 800/1000*100
         assert rows[0]["鍾離_damage"] == "200"
+        assert rows[0]["鍾離_dps"] == "200.00"  # 1000 * 0.2
         assert rows[0]["鍾離_pct"] == "20.0"  # 200/1000*100
         # No char{N}_name columns
         assert "char1_name" not in rows[0]
@@ -88,7 +90,10 @@ class TestWriteCsv:
         rows = list(csv.DictReader(out.open(encoding="utf-8")))
         # First row: 鍾離 not present → empty
         assert rows[0]["鍾離_damage"] == ""
+        assert rows[0]["鍾離_dps"] == ""
         assert rows[0]["鍾離_pct"] == ""
         # Second row: both present
         assert rows[1]["鍾離_damage"] == "1200"
+        assert rows[1]["鍾離_dps"] == "600.00"  # 1500 * (1200/3000)
         assert rows[1]["胡桃_damage"] == "1800"
+        assert rows[1]["胡桃_dps"] == "900.00"  # 1500 * (1800/3000)
