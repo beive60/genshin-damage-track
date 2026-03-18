@@ -50,8 +50,8 @@ def run(
     plot: Annotated[bool, typer.Option("--plot", "-p", help="Generate a DPS graph.")] = False,
     plot_output: Annotated[
         Optional[Path],
-        typer.Option("--plot-output", "-q", help="Save the graph to this file instead of showing it."),
-    ] = Path("graph.png"),
+        typer.Option("--plot-output", help="Save the graph to this file instead of showing it."),
+    ] = None,
     verbose: Annotated[
         bool,
         typer.Option("--verbose", "-v", help="Enable debug logging for pipeline diagnostics."),
