@@ -57,31 +57,61 @@
 ### 基本実行
 
 ```powershell
-genshin-damage-track video.mp4
+genshin-damage-track extract video.mp4
+# → video.csv が生成される
 ```
 
 ### オプション
 
 ```powershell
 # パターンを明示的に指定（デフォルト: per-character）
-genshin-damage-track video.mp4 --pattern total-only
-genshin-damage-track video.mp4 --pattern per-character
+genshin-damage-track extract video.mp4 --pattern total-only
+genshin-damage-track extract video.mp4 --pattern per-character
 
 # サンプリングレートを 2fps に指定
-genshin-damage-track video.mp4 --fps 2
+genshin-damage-track extract video.mp4 --fps 2
 
 # DPS 平均化区間を 120 フレーム（60fps 動画で 2 秒窓）に変更
-genshin-damage-track video.mp4 --dps-interval 120
+genshin-damage-track extract video.mp4 --dps-interval 120
 
-# CSV ファイルとして出力
-genshin-damage-track video.mp4 --output result.csv
+# CSV 出力先を明示的に指定（デフォルト: <動画ファイル名>.csv）
+genshin-damage-track extract video.mp4 --output result.csv
 
 # グラフを生成して PNG に保存
-genshin-damage-track video.mp4 --plot --plot-output graph.png
+genshin-damage-track extract video.mp4 --plot --plot-output graph.png
 
 # すべてのオプションを組み合わせ
-genshin-damage-track video.mp4 --fps 2 --dps-interval 60 --output result.csv --plot --plot-output graph.png
+genshin-damage-track extract video.mp4 --fps 2 --dps-interval 60 --output result.csv --plot --plot-output graph.png
 ```
+
+### CSV からグラフを再生成
+
+OCR によるデータ欠損を手動で修正した CSV からグラフを再生成できます。
+動画パイプラインを再実行する必要はありません。
+
+```powershell
+# CSV を読み込んでグラフをインタラクティブに表示
+genshin-damage-track plot result.csv
+
+# グラフを PNG ファイルとして保存
+genshin-damage-track plot result.csv --plot-output graph.png
+
+# DPS 平均化区間をグラフタイトルに反映（デフォルト: 60）
+genshin-damage-track plot result.csv --dps-interval 120 --plot-output graph.png
+```
+
+**ワークフロー例:**
+
+1. 動画からデータを抽出（CSV が自動生成される）
+   ```powershell
+   genshin-damage-track extract video.mp4
+   # → video.csv が生成される
+   ```
+2. CSV をエディタで開き、OCR 誤認識の値を手動で修正
+3. 修正済み CSV からグラフを生成
+   ```powershell
+   genshin-damage-track plot video.csv --plot-output graph.png
+   ```
 
 ### デバッグ・診断
 
@@ -89,13 +119,13 @@ genshin-damage-track video.mp4 --fps 2 --dps-interval 60 --output result.csv --p
 
 ```powershell
 # 詳細ログを有効化（OCR 生テキスト、パース結果、ROI 座標等を表示）
-genshin-damage-track video.mp4 --verbose --output result.csv
+genshin-damage-track extract video.mp4 --verbose
 
 # クロップ画像を保存して ROI 座標を目視確認
-genshin-damage-track video.mp4 --save-crops ./debug_crops --output result.csv
+genshin-damage-track extract video.mp4 --save-crops ./debug_crops
 
 # 両方を組み合わせてフルデバッグ
-genshin-damage-track video.mp4 -v --save-crops ./debug_crops --output result.csv
+genshin-damage-track extract video.mp4 -v --save-crops ./debug_crops
 ```
 
 `--verbose` (`-v`) を指定すると、以下の情報がログ出力されます:
@@ -110,6 +140,8 @@ genshin-damage-track video.mp4 -v --save-crops ./debug_crops --output result.csv
 
 ### CSV 出力フォーマット
 
+#### パターン1（total-only）
+
 ```csv
 timestamp_sec,dps,delta_damage,total_damage
 1.0,1500.00,1500,1500
@@ -117,9 +149,21 @@ timestamp_sec,dps,delta_damage,total_damage
 3.0,1750.00,1750,5250
 ```
 
+#### パターン2（per-character）
+
+```csv
+timestamp_sec,dps,delta_damage,total_damage,胡桃_damage,胡桃_dps,胡桃_pct,夜蘭_damage,夜蘭_dps,夜蘭_pct,鍾離_damage,鍾離_dps,鍾離_pct,ベネット_damage,ベネット_dps,ベネット_pct
+1.0,1500.00,1500,1500,900,900.00,60.0,300,300.00,20.0,200,200.00,13.3,100,100.00,6.7
+```
+
+#### カラム説明
+
 - `dps`: 平均化区間内のショートターム DPS (damage/sec)
 - `delta_damage`: 直前の OCR 成功フレームからの差分ダメージ
 - `total_damage`: 画面表示の累計ダメージ
+- `{name}_damage`: キャラクター別の累計ダメージ
+- `{name}_dps`: キャラクター別の DPS（全体 DPS × 割合）
+- `{name}_pct`: キャラクター別のダメージ割合（%）
 - OCR が失敗したフレームはスキップされ、次の成功フレームとの差分が計算されます
 
 ## テストの実行
@@ -159,7 +203,8 @@ genshin-damage-track/
 │   ├── test_recognizer.py
 │   ├── test_parser.py
 │   ├── test_detector.py
-│   └── test_orchestrator.py
+│   ├── test_orchestrator.py
+│   └── test_visualizer.py
 └── fixtures/
     └── samples/
 ```
