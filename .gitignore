@@ -27,6 +27,7 @@ coverage.xml
 
 # Debug output
 build.log
+.output/
 
 # IDE
 .idea/
