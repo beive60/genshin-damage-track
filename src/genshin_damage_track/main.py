@@ -47,11 +47,11 @@ def run(
         Optional[Path],
         typer.Option("--output", "-o", help="Write DPS results to this CSV file."),
     ] = None,
-    plot: Annotated[bool, typer.Option("--plot", help="Generate a DPS graph.")] = False,
+    plot: Annotated[bool, typer.Option("--plot", "-p", help="Generate a DPS graph.")] = False,
     plot_output: Annotated[
         Optional[Path],
-        typer.Option("--plot-output", help="Save the graph to this file instead of showing it."),
-    ] = None,
+        typer.Option("--plot-output", "-q", help="Save the graph to this file instead of showing it."),
+    ] = Path("graph.png"),
     verbose: Annotated[
         bool,
         typer.Option("--verbose", "-v", help="Enable debug logging for pipeline diagnostics."),

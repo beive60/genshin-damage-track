@@ -64,7 +64,14 @@ def plot_damage(
     output_path: str | Path | None = None,
     show: bool = False,
 ) -> None:
-    """Generate a DPS time-series graph from *result*.
+    """Generate DPS and total-damage time-series graphs from *result*.
+
+    Two subplots are produced:
+
+    1. **DPS** — overall DPS line.  When the pattern is
+       ``PER_CHARACTER`` and a party has been resolved, per-character
+       DPS lines are drawn as well.
+    2. **Total damage** — cumulative damage over time.
 
     Parameters
     ----------
@@ -77,6 +84,7 @@ def plot_damage(
         ``matplotlib.pyplot.show()``.
     """
     import matplotlib.pyplot as plt  # noqa: PLC0415
+    import matplotlib.ticker as ticker  # noqa: PLC0415
 
     dps_records = result.dps_records
     timestamps = [r.timestamp_sec for r in dps_records]
@@ -84,17 +92,50 @@ def plot_damage(
         r.dps if r.dps is not None else float("nan")
         for r in dps_records
     ]
+    total_damage_values = [
+        r.total_damage if r.total_damage is not None else float("nan")
+        for r in dps_records
+    ]
 
-    fig, ax = plt.subplots(figsize=(12, 5))
-    ax.plot(timestamps, dps_values, label="DPS", marker="o", linewidth=1.5)
+    fig, (ax_dps, ax_dmg) = plt.subplots(2, 1, figsize=(12, 9))
 
-    ax.set_xlabel("Time (s)")
-    ax.set_ylabel("DPS (damage / sec)")
-    ax.set_title(
+    # --- DPS subplot ---
+    ax_dps.plot(timestamps, dps_values, label="DPS", marker="o", linewidth=1.5)
+
+    if result.pattern == RegionPattern.PER_CHARACTER and result.party:
+        for name in result.party:
+            char_dps = []
+            for rec in dps_records:
+                char_map = {ch.name: ch for ch in rec.characters}
+                ch = char_map.get(name)
+                if ch is not None and rec.dps is not None and rec.total_damage and rec.total_damage > 0:
+                    pct = ch.damage / rec.total_damage
+                    char_dps.append(rec.dps * pct)
+                else:
+                    char_dps.append(float("nan"))
+            ax_dps.plot(timestamps, char_dps, label=name, linewidth=1.0)
+
+    ax_dps.set_xlabel("Time (s)")
+    ax_dps.set_ylabel("DPS (×1000 damage / sec)")
+    ax_dps.set_title(
         f"Genshin Impact — Short-term DPS (interval={result.dps_interval} frames)"
     )
-    ax.legend()
-    ax.grid(True, alpha=0.3)
+    ax_dps.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{x / 1e3:.1f}"))
+    ax_dps.legend()
+    ax_dps.grid(True, alpha=0.3)
+
+    # --- Total damage subplot ---
+    ax_dmg.plot(timestamps, total_damage_values, label="Total Damage", marker="o", linewidth=1.5, color="tab:green")
+    ax_dmg.set_xlabel("Time (s)")
+    ax_dmg.set_ylabel("Total Damage (×1000)")
+    ax_dmg.set_title(
+        f"Genshin Impact — Cumulative Total Damage (interval={result.dps_interval} frames)"
+    )
+    ax_dmg.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{x / 1e3:.1f}"))
+    ax_dmg.legend()
+    ax_dmg.grid(True, alpha=0.3)
+
+    fig.tight_layout()
 
     if output_path is not None:
         fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
