@@ -9,6 +9,7 @@ from genshin_damage_track.models import (
     CharacterDamage,
     DpsRecord,
     ExtractionResult,
+    FrameRecord,
     RegionPattern,
 )
 
@@ -16,10 +17,9 @@ from genshin_damage_track.models import (
 def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
     """Write *result* to a CSV file at *output_path*.
 
-    The CSV contains DPS records computed from the cumulative damage deltas.
-    When the pattern is ``PER_CHARACTER`` and a party has been resolved,
-    per-character columns are appended using the party member names
-    (e.g. ``胡桃_damage``, ``胡桃_pct``).
+    Column order follows: cumulative total → delta → DPS (→ pct).
+    Per-character columns mirror the same order when the pattern is
+    ``PER_CHARACTER``.
 
     Parameters
     ----------
@@ -31,9 +31,15 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
     path = Path(output_path)
     party = result.party
 
-    fieldnames = ["timestamp_sec", "dps", "delta_damage", "total_damage"]
+    fieldnames = ["timestamp_sec", "total_damage", "delta_damage", "dps"]
     for name in party:
-        fieldnames.extend([f"{name}_damage", f"{name}_dps", f"{name}_pct"])
+        fieldnames.extend([
+            f"{name}_total_damage", f"{name}_delta_damage",
+            f"{name}_dps", f"{name}_pct",
+        ])
+
+    # Pre-compute per-character previous cumulative damage for delta calc
+    prev_char_dmg: dict[str, int] = {}
 
     with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
@@ -41,16 +47,21 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
         for rec in result.dps_records:
             row: dict[str, object] = {
                 "timestamp_sec": rec.timestamp_sec,
-                "dps": f"{rec.dps:.2f}" if rec.dps is not None else "",
-                "delta_damage": rec.delta_damage if rec.delta_damage is not None else "",
                 "total_damage": rec.total_damage if rec.total_damage is not None else "",
+                "delta_damage": rec.delta_damage if rec.delta_damage is not None else "",
+                "dps": f"{rec.dps:.2f}" if rec.dps is not None else "",
             }
-            # Map characters by name
             char_map = {ch.name: ch for ch in rec.characters}
             for name in party:
                 ch = char_map.get(name)
                 if ch is not None:
-                    row[f"{name}_damage"] = ch.damage
+                    char_delta: int | None = None
+                    if name in prev_char_dmg:
+                        char_delta = ch.damage - prev_char_dmg[name]
+                    prev_char_dmg[name] = ch.damage
+
+                    row[f"{name}_total_damage"] = ch.damage
+                    row[f"{name}_delta_damage"] = char_delta if char_delta is not None else ""
                     if rec.total_damage and rec.total_damage > 0:
                         pct = ch.damage / rec.total_damage
                         row[f"{name}_pct"] = f"{pct * 100:.1f}"
@@ -59,7 +70,8 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
                         row[f"{name}_pct"] = ""
                         row[f"{name}_dps"] = ""
                 else:
-                    row[f"{name}_damage"] = ""
+                    row[f"{name}_total_damage"] = ""
+                    row[f"{name}_delta_damage"] = ""
                     row[f"{name}_dps"] = ""
                     row[f"{name}_pct"] = ""
             writer.writerow(row)
@@ -69,62 +81,68 @@ def read_csv(csv_path: str | Path, dps_interval: int = 60) -> ExtractionResult:
     """Read a CSV previously written by :func:`write_csv` and reconstruct an
     :class:`ExtractionResult` suitable for :func:`plot_damage`.
 
-    This allows users to manually fix OCR errors in the CSV and then
-    re-generate graphs without re-running the full video pipeline.
+    Only master-data columns (``total_damage`` and ``{name}_total_damage``)
+    are read.  Derived values (``delta_damage``, ``dps``, ``{name}_dps``,
+    ``{name}_pct``, ``{name}_delta_damage``) are **recomputed** via
+    :func:`~genshin_damage_track.orchestrator.compute_dps` so that
+    hand-edited cumulative values automatically propagate correctly.
 
     Parameters
     ----------
     csv_path:
         Path to the CSV file.
     dps_interval:
-        DPS averaging window in frames (used only for graph titles).
+        DPS averaging window (number of samples) for the moving average.
     """
+    from genshin_damage_track.orchestrator import compute_dps  # noqa: PLC0415
+
     path = Path(csv_path)
 
     with path.open(encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
         fieldnames: list[str] = reader.fieldnames or []
 
-        # Infer party names from columns matching  {name}_damage
-        base_columns = {"timestamp_sec", "dps", "delta_damage", "total_damage"}
+        # Infer party names from columns matching {name}_total_damage
+        base_columns = {"timestamp_sec", "total_damage", "delta_damage", "dps"}
         party: list[str] = []
-        damage_col_re = re.compile(r"^(.+)_damage$")
+        total_dmg_re = re.compile(r"^(.+)_total_damage$")
         for col in fieldnames:
             if col in base_columns:
                 continue
-            m = damage_col_re.match(col)
+            m = total_dmg_re.match(col)
             if m:
                 party.append(m.group(1))
 
         pattern = RegionPattern.PER_CHARACTER if party else RegionPattern.TOTAL_ONLY
 
-        dps_records: list[DpsRecord] = []
+        # Build FrameRecords from master columns only
+        frame_records: list[FrameRecord] = []
         for row in reader:
             ts = float(row["timestamp_sec"])
-            dps = float(row["dps"]) if row.get("dps") else None
-            delta = int(row["delta_damage"]) if row.get("delta_damage") else None
-            total = int(row["total_damage"]) if row.get("total_damage") else None
+            total_str = row.get("total_damage", "")
+            total = int(total_str) if total_str else None
 
             characters: list[CharacterDamage] = []
             for slot, name in enumerate(party):
-                dmg_str = row.get(f"{name}_damage", "")
+                dmg_str = row.get(f"{name}_total_damage", "")
                 if dmg_str:
                     characters.append(
                         CharacterDamage(slot=slot, name=name, damage=int(dmg_str)),
                     )
 
-            dps_records.append(
-                DpsRecord(
+            frame_records.append(
+                FrameRecord(
                     timestamp_sec=ts,
-                    dps=dps,
-                    delta_damage=delta,
                     total_damage=total,
                     characters=characters,
                 ),
             )
 
+    dps_records = compute_dps(frame_records, dps_interval)
+
     return ExtractionResult(
         pattern=pattern,
+        frame_records=frame_records,
         dps_records=dps_records,
         party=party,
         source_file=str(path),
