@@ -143,28 +143,36 @@ genshin-damage-track extract video.mp4 -v --save-crops ./debug_crops
 #### パターン1（total-only）
 
 ```csv
-timestamp_sec,dps,delta_damage,total_damage
-1.0,1500.00,1500,1500
-2.0,2000.00,2000,3500
-3.0,1750.00,1750,5250
+timestamp_sec,total_damage,delta_damage,dps
+1.0,1500,1500,1500.00
+2.0,3500,2000,2000.00
+3.0,5250,1750,1750.00
 ```
 
 #### パターン2（per-character）
 
 ```csv
-timestamp_sec,dps,delta_damage,total_damage,胡桃_damage,胡桃_dps,胡桃_pct,夜蘭_damage,夜蘭_dps,夜蘭_pct,鍾離_damage,鍾離_dps,鍾離_pct,ベネット_damage,ベネット_dps,ベネット_pct
-1.0,1500.00,1500,1500,900,900.00,60.0,300,300.00,20.0,200,200.00,13.3,100,100.00,6.7
+timestamp_sec,total_damage,delta_damage,dps,胡桃_total_damage,胡桃_delta_damage,胡桃_dps,胡桃_pct,夜蘭_total_damage,夜蘭_delta_damage,夜蘭_dps,夜蘭_pct
+1.0,1500,1500,1500.00,900,,900.00,60.0,600,,600.00,40.0
+2.0,3500,2000,2000.00,2100,1200,1200.00,60.0,1400,800,800.00,40.0
 ```
 
 #### カラム説明
 
-- `dps`: 平均化区間内のショートターム DPS (damage/sec)
-- `delta_damage`: 直前の OCR 成功フレームからの差分ダメージ
+**マスターデータ（手動修正対象）:**
+
 - `total_damage`: 画面表示の累計ダメージ
-- `{name}_damage`: キャラクター別の累計ダメージ
+- `{name}_total_damage`: キャラクター別の累計ダメージ
+
+**派生データ（`plot` コマンドで自動再計算）:**
+
+- `delta_damage`: 直前の OCR 成功フレームからの差分ダメージ
+- `dps`: 平均化区間内のショートターム DPS (damage/sec)
+- `{name}_delta_damage`: キャラクター別の差分ダメージ
 - `{name}_dps`: キャラクター別の DPS（全体 DPS × 割合）
 - `{name}_pct`: キャラクター別のダメージ割合（%）
 - OCR が失敗したフレームはスキップされ、次の成功フレームとの差分が計算されます
+- `plot` コマンドは CSV からマスターデータのみ読み取り、派生データを再計算します
 
 ## テストの実行
 
