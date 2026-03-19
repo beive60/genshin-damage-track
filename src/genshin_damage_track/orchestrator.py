@@ -84,16 +84,12 @@ def run_pipeline(
         crops_dir.mkdir(parents=True, exist_ok=True)
         logger.info("Saving cropped ROI images to %s", crops_dir)
 
-    # --- Phase 1: sample frames -------------------------------------------
-    sampled = list(sample_frames(path, sample_rate=sample_rate))
-    logger.info("Sampled %d frames from %s", len(sampled), path)
+    # --- Phase 1 & 2: stream frames and extract per-frame records ---------
     logger.info("Using pattern: %s", pattern.value)
-
-    # --- Phase 2: extract per-frame cumulative records ---------------------
     frame_records: list[FrameRecord] = []
     valid_ocr_count = 0
 
-    for idx, sampled_frame in enumerate(sampled):
+    for idx, sampled_frame in enumerate(sample_frames(path, sample_rate=sample_rate)):
         record = _extract_frame_record(
             sampled_frame.timestamp_sec, sampled_frame.image, pattern, engine,
             party=party, crops_dir=crops_dir, frame_index=idx,
@@ -102,6 +98,7 @@ def run_pipeline(
         if record.total_damage is not None:
             valid_ocr_count += 1
 
+    logger.info("Sampled %d frames from %s", len(frame_records), path)
     logger.info(
         "Extraction complete: %d/%d frames yielded valid total_damage",
         valid_ocr_count, len(frame_records),
