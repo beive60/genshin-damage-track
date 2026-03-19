@@ -41,11 +41,16 @@ def sample_frames(
 
     Raises
     ------
+    ValueError
+        If *sample_rate* is not positive.
     FileNotFoundError
         If *video_path* does not exist.
     RuntimeError
         If the video cannot be opened by OpenCV.
     """
+    if sample_rate <= 0:
+        raise ValueError(f"sample_rate must be positive, got {sample_rate}")
+
     path = Path(video_path)
     if not path.exists():
         raise FileNotFoundError(f"Video file not found: {path}")

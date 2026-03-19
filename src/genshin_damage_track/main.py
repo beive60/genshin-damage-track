@@ -84,6 +84,10 @@ def extract(
 
     _configure_logging(verbose)
 
+    if fps <= 0:
+        typer.echo(f"Error: --fps must be positive, got {fps}", err=True)
+        raise typer.Exit(code=1)
+
     if not video.exists():
         typer.echo(f"Error: video file not found: {video}", err=True)
         raise typer.Exit(code=1)

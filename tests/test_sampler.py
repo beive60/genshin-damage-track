@@ -23,6 +23,11 @@ def _make_mock_cap(frame_count: int = 10, fps: float = 10.0):
 
 
 class TestSampleFrames:
+    @pytest.mark.parametrize("bad_rate", [0, -1, -0.5])
+    def test_raises_on_non_positive_sample_rate(self, tmp_path, bad_rate):
+        with pytest.raises(ValueError, match="sample_rate must be positive"):
+            list(sample_frames(tmp_path / "dummy.mp4", sample_rate=bad_rate))
+
     def test_raises_on_missing_file(self, tmp_path):
         with pytest.raises(FileNotFoundError):
             list(sample_frames(tmp_path / "nonexistent.mp4"))
