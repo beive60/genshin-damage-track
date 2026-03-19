@@ -66,4 +66,4 @@ class ExtractionResult:
     party: list[str] = field(default_factory=list)
     source_file: str = ""
     fps_sample_rate: float = 1.0
-    dps_interval: int = 60
+    dps_interval: int = 1
