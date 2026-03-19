@@ -55,7 +55,7 @@ DPS計測かかし++（Kosmos氏投稿、ステージGUID：13031458938）の動
 | オプション | 説明 | デフォルト |
 | --- | --- | --- |
 | `--pattern` | 表示パターン（`total-only` \| `per-character`） | `per-character` |
-| `--fps` | サンプリングレート（fps） | `4` |
+| `--fps` | サンプリングレート（fps） | `1.0` |
 | `--dps-interval` | DPS 平均化区間（サンプル数）。1 = 瞬間 DPS | `1` |
 | `--output` | CSV 出力先パス | `<動画ファイル名>.csv` |
 | `--plot` | グラフをウィンドウで表示する | ― |
