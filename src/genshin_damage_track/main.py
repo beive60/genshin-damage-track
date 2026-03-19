@@ -24,15 +24,14 @@ def _configure_logging(verbose: bool) -> None:
     to ``DEBUG``; otherwise only ``INFO`` and above are printed.
     """
     level = logging.DEBUG if verbose else logging.INFO
-    handler = logging.StreamHandler(
-        stream=open(sys.stdout.fileno(), mode='w', encoding='utf-8', closefd=False),
-    )
-    handler.setFormatter(
-        logging.Formatter("%(levelname)s [%(name)s] %(message)s"),
-    )
     root = logging.getLogger("genshin_damage_track")
     root.setLevel(level)
-    root.addHandler(handler)
+    if not root.handlers:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(
+            logging.Formatter("%(levelname)s [%(name)s] %(message)s"),
+        )
+        root.addHandler(handler)
 
 
 @app.command()
