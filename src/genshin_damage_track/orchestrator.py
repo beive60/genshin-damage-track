@@ -204,8 +204,11 @@ def compute_dps(
 
     For each pair of consecutive frames where OCR returned a valid
     ``total_damage``, the delta (current − previous) is divided by the
-    elapsed time to produce an instantaneous DPS value.  A simple
-    moving-average over *dps_interval* entries is then applied.
+    elapsed time to produce an instantaneous DPS value.
+
+    When *dps_interval* is greater than 1, a simple moving-average over
+    that many entries is applied.  When it is 1 (the default), the raw
+    instantaneous DPS values are returned as-is.
 
     Parameters
     ----------
@@ -213,7 +216,7 @@ def compute_dps(
         Ordered list of per-frame cumulative damage readings.
     dps_interval:
         Window size (in number of instantaneous DPS samples) for the
-        moving average.
+        moving average.  ``1`` means no averaging (instantaneous DPS).
 
     Returns
     -------

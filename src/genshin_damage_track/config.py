@@ -13,9 +13,10 @@ VIDEO_FPS = 60
 # Default sampling rate (frames per second to process)
 DEFAULT_SAMPLE_RATE: float = 1.0
 
-# Default DPS averaging interval in frames.
-# At 60 fps this equals a 1-second window.
-DEFAULT_DPS_INTERVAL: int = 60
+# Default DPS averaging interval (number of instantaneous DPS samples).
+# 1 means no averaging (instantaneous DPS).  Values > 1 apply a
+# moving-average window of that many samples.
+DEFAULT_DPS_INTERVAL: int = 1
 
 # Maximum number of characters in a party.
 MAX_CHARACTERS: int = 4

@@ -123,3 +123,17 @@ class TestComputeDps:
         # Each DPS record keeps the characters from its source frame
         assert result[0].characters == chars_a
         assert result[1].characters == chars_b
+
+    def test_default_interval_returns_instantaneous_dps(self):
+        records = [
+            FrameRecord(timestamp_sec=0.0, total_damage=0),
+            FrameRecord(timestamp_sec=1.0, total_damage=1000),
+            FrameRecord(timestamp_sec=2.0, total_damage=3000),
+            FrameRecord(timestamp_sec=3.0, total_damage=4000),
+        ]
+        # dps_interval=1 (default) returns raw instantaneous DPS
+        result = compute_dps(records)
+        assert len(result) == 3
+        assert result[0].dps == pytest.approx(1000.0)
+        assert result[1].dps == pytest.approx(2000.0)
+        assert result[2].dps == pytest.approx(1000.0)

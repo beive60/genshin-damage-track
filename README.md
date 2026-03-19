@@ -7,7 +7,7 @@
 - FHD (1920×1080) 60fps の動画ファイルから指定レートでフレームをサンプリング
 - 固定座標の関心領域 (ROI) を自動検出し、OCR で累計ダメージ数値を抽出
 - 画面に表示される累計ダメージの差分から、フレーム間の与ダメージを算出
-- 移動平均ウィンドウ（デフォルト: 60 フレーム ＝ 60fps 動画で 1 秒間）でショートターム DPS を計算
+- 瞬間 DPS（差分ダメージ ÷ 経過時間）をデフォルトで出力。`--dps-interval N`（N > 1）を指定すると N サンプルの移動平均 DPS に切替可能
 - パターン1（合計ダメージのみ: `total-only`）とパターン2（合計＋キャラクター別ダメージ: `per-character`）を `--pattern` オプションで指定可能（デフォルト: `per-character`）
 - 結果を CSV ファイルおよびグラフ (PNG) として出力
 
@@ -43,8 +43,8 @@
 
 1. 各サンプリングフレームで OCR により累計ダメージを取得
 2. OCR が成功した連続フレーム間のダメージ差分（デルタ）を計算
-3. `DPS = デルタダメージ ÷ 経過時間（秒）`
-4. 設定された平均化区間（デフォルト: 60 フレーム）で移動平均を適用
+3. `DPS = デルタダメージ ÷ 経過時間（秒）`（瞬間 DPS）
+4. `--dps-interval N`（N > 1）指定時、N サンプルの移動平均を適用（デフォルト: 1 = 瞬間 DPS）
 
 ## 動作環境
 
@@ -71,7 +71,7 @@ genshin-damage-track extract video.mp4 --pattern per-character
 # サンプリングレートを 2fps に指定
 genshin-damage-track extract video.mp4 --fps 2
 
-# DPS 平均化区間を 120 フレーム（60fps 動画で 2 秒窓）に変更
+# DPS 平均化区間を 120 サンプルに変更（移動平均 DPS）
 genshin-damage-track extract video.mp4 --dps-interval 120
 
 # CSV 出力先を明示的に指定（デフォルト: <動画ファイル名>.csv）
@@ -96,7 +96,7 @@ genshin-damage-track plot result.csv
 # グラフを PNG ファイルとして保存
 genshin-damage-track plot result.csv --plot-output graph.png
 
-# DPS 平均化区間をグラフタイトルに反映（デフォルト: 60）
+# DPS 平均化区間を指定して移動平均 DPS でグラフを生成
 genshin-damage-track plot result.csv --dps-interval 120 --plot-output graph.png
 ```
 

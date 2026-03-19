@@ -77,7 +77,7 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
             writer.writerow(row)
 
 
-def read_csv(csv_path: str | Path, dps_interval: int = 60) -> ExtractionResult:
+def read_csv(csv_path: str | Path, dps_interval: int = 1) -> ExtractionResult:
     """Read a CSV previously written by :func:`write_csv` and reconstruct an
     :class:`ExtractionResult` suitable for :func:`plot_damage`.
 

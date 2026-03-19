@@ -41,8 +41,8 @@ def extract(
     fps: Annotated[float, typer.Option("--fps", help="Frames to sample per second.")] = 1.0,
     dps_interval: Annotated[
         int,
-        typer.Option("--dps-interval", help="DPS averaging window in frames (default: 60)."),
-    ] = 60,
+        typer.Option("--dps-interval", help="DPS moving-average window size. 1 = instantaneous DPS (default)."),
+    ] = 1,
     output: Annotated[
         Optional[Path],
         typer.Option("--output", "-o", help="CSV output path (default: <video>.csv)."),
@@ -130,8 +130,8 @@ def plot(
     ] = None,
     dps_interval: Annotated[
         int,
-        typer.Option("--dps-interval", help="DPS averaging window in frames (for graph title, default: 60)."),
-    ] = 60,
+        typer.Option("--dps-interval", help="DPS moving-average window size. 1 = instantaneous DPS (default)."),
+    ] = 1,
     verbose: Annotated[
         bool,
         typer.Option("--verbose", "-v", help="Enable debug logging."),
