@@ -41,8 +41,9 @@ def run_pipeline(
         Frames per second to process.
     dps_interval:
         Number of sampled frames for the DPS moving-average window.
-        At the default of 60 with a 60 fps video sampled at 60 fps this
-        equals a 1-second window.
+        At the default of 1 this corresponds to a per-frame DPS value with
+        no temporal smoothing. For example, with a value of 60 on a 60 fps
+        video sampled at 60 fps this equals a 1-second window.
     engine:
         Optional pre-initialised :class:`OCREngine`.  A new instance is
         created when not provided.
