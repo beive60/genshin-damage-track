@@ -44,12 +44,14 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
     with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
-        for rec in result.dps_records:
+        # Write one row per frame so read_csv can faithfully reconstruct FrameRecords
+        for rec in result.frame_records:
             row: dict[str, object] = {
                 "timestamp_sec": rec.timestamp_sec,
                 "total_damage": rec.total_damage if rec.total_damage is not None else "",
-                "delta_damage": rec.delta_damage if rec.delta_damage is not None else "",
-                "dps": f"{rec.dps:.2f}" if rec.dps is not None else "",
+                # DPS-related columns are derived; leave them blank for recomputation.
+                "delta_damage": "",
+                "dps": "",
             }
             char_map = {ch.name: ch for ch in rec.characters}
             for name in party:
@@ -62,13 +64,9 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
 
                     row[f"{name}_total_damage"] = ch.damage
                     row[f"{name}_delta_damage"] = char_delta if char_delta is not None else ""
-                    if rec.total_damage and rec.total_damage > 0:
-                        pct = ch.damage / rec.total_damage
-                        row[f"{name}_pct"] = f"{pct * 100:.1f}"
-                        row[f"{name}_dps"] = f"{rec.dps * pct:.2f}" if rec.dps is not None else ""
-                    else:
-                        row[f"{name}_pct"] = ""
-                        row[f"{name}_dps"] = ""
+                    # Per-character pct and DPS are also derived from frames; leave blank.
+                    row[f"{name}_pct"] = ""
+                    row[f"{name}_dps"] = ""
                 else:
                     row[f"{name}_total_damage"] = ""
                     row[f"{name}_delta_damage"] = ""
