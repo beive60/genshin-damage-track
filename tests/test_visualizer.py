@@ -91,7 +91,7 @@ class TestWriteCsv:
         out = tmp_path / "out.csv"
         write_csv(result, out)
         rows = list(csv.DictReader(out.open(encoding="utf-8")))
-        # First row: no previous → delta is empty
+        # First row: no previous -> delta is empty
         assert rows[0]["胡桃_delta_damage"] == ""
         # Second row: 2500 - 1000 = 1500
         assert rows[1]["胡桃_delta_damage"] == "1500"
@@ -131,7 +131,7 @@ class TestWriteCsv:
         out = tmp_path / "out.csv"
         write_csv(result, out)
         rows = list(csv.DictReader(out.open(encoding="utf-8")))
-        # First row: 鍾離 not present → empty
+        # First row: 鍾離 not present -> empty
         assert rows[0]["鍾離_total_damage"] == ""
         assert rows[0]["鍾離_delta_damage"] == ""
         assert rows[0]["鍾離_dps"] == ""
@@ -230,7 +230,7 @@ class TestReadCsv:
         assert rec.characters[0].damage == 3600
 
     def test_round_trip_preserves_master_data(self, tmp_path):
-        """write_csv → read_csv round-trip preserves cumulative damage."""
+        """write_csv -> read_csv round-trip preserves cumulative damage."""
         chars = [
             CharacterDamage(slot=0, name="胡桃", damage=800),
             CharacterDamage(slot=1, name="鍾離", damage=200),
@@ -248,7 +248,7 @@ class TestReadCsv:
         out = tmp_path / "rt.csv"
         write_csv(original, out)
         loaded = read_csv(out, dps_interval=1)
-        # Only one DPS record from one frame → no consecutive pair → no DPS
+        # Only one DPS record from one frame -> no consecutive pair -> no DPS
         # But the frame_records should contain the master data
         assert loaded.pattern == RegionPattern.PER_CHARACTER
         assert loaded.party == ["胡桃", "鍾離"]

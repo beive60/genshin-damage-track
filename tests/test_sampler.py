@@ -39,7 +39,7 @@ class TestSampleFrames:
                 list(sample_frames(video_path))
 
     def test_sample_rate_1fps_from_10fps_video(self, tmp_path):
-        """1 fps from a 10 fps source → every 10th frame = 1 frame per second."""
+        """1 fps from a 10 fps source -> every 10th frame = 1 frame per second."""
         video_path = tmp_path / "video.mp4"
         video_path.touch()
 
@@ -47,11 +47,11 @@ class TestSampleFrames:
         with patch("genshin_damage_track.pipeline.sampler.cv2.VideoCapture", return_value=cap):
             result = list(sample_frames(video_path, sample_rate=1.0))
 
-        # 20 frames at 10fps = 2 seconds → expect 2 sampled frames (frame 0, frame 10)
+        # 20 frames at 10fps = 2 seconds -> expect 2 sampled frames (frame 0, frame 10)
         assert len(result) == 2
 
     def test_sample_rate_equals_source_fps(self, tmp_path):
-        """sample_rate == native fps → every frame is returned."""
+        """sample_rate == native fps -> every frame is returned."""
         video_path = tmp_path / "video.mp4"
         video_path.touch()
 
@@ -84,7 +84,7 @@ class TestSampleFrames:
         with patch("genshin_damage_track.pipeline.sampler.cv2.VideoCapture", return_value=cap):
             result = list(sample_frames(video_path, sample_rate=1.0))
 
-        # 30 frames at 10fps = 3 seconds → frames at t=0.0, 1.0, 2.0
+        # 30 frames at 10fps = 3 seconds -> frames at t=0.0, 1.0, 2.0
         assert [sf.timestamp_sec for sf in result] == pytest.approx([0.0, 1.0, 2.0])
 
     def test_cap_is_released_after_iteration(self, tmp_path):

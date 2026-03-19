@@ -17,7 +17,7 @@ from genshin_damage_track.models import (
 def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
     """Write *result* to a CSV file at *output_path*.
 
-    Column order follows: cumulative total → delta → DPS (→ pct).
+    Column order follows: cumulative total -> delta -> DPS (-> pct).
     Per-character columns mirror the same order when the pattern is
     ``PER_CHARACTER``.
 

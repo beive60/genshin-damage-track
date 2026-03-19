@@ -6,7 +6,7 @@ The OCR output for a damage region may look like:
   - "1234567"
 
 This module extracts the first valid integer from such strings and applies
-common OCR mis-recognition corrections (e.g. "O" → "0", "l" → "1").
+common OCR mis-recognition corrections (e.g. "O" -> "0", "l" -> "1").
 """
 from __future__ import annotations
 

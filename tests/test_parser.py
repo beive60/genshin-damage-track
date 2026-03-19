@@ -16,9 +16,9 @@ class TestParseToNumeric:
             ("胡桃 123,456", 123456),
             ("  12345  ", 12345),
             # OCR mis-recognition corrections (uppercase look-alikes only)
-            ("1O2O3", 10203),   # O → 0
-            ("l2345", 12345),   # l → 1
-            ("I2345", 12345),   # I → 1
+            ("1O2O3", 10203),   # O -> 0
+            ("l2345", 12345),   # l -> 1
+            ("I2345", 12345),   # I -> 1
         ],
     )
     def test_valid_inputs(self, text, expected):
