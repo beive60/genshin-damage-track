@@ -4,14 +4,14 @@
         {
             "label": "Install Dev Dependencies",
             "type": "shell",
-            "command": "uv pip install -e \".[dev]\"",
+            "command": "uv sync --all-extras",
             "group": "build",
             "problemMatcher": []
         },
         {
             "label": "Run Tests",
             "type": "shell",
-            "command": "python -m pytest tests/ -v",
+            "command": "uv run pytest tests/ -v",
             "group": {
                 "kind": "test",
                 "isDefault": true
@@ -21,14 +21,14 @@
         {
             "label": "Run Tests with Coverage",
             "type": "shell",
-            "command": "python -m pytest tests/ -v --cov=genshin_damage_track --cov-report=term-missing",
+            "command": "uv run pytest tests/ -v --cov=genshin_damage_track --cov-report=term-missing",
             "group": "test",
             "problemMatcher": []
         },
         {
             "label": "Build Executable",
             "type": "shell",
-            "command": "if (-not (Test-Path .venv-build)) { uv venv .venv-build }; & .venv-build\\Scripts\\activate.ps1; uv pip install .; uv pip install pyinstaller; pyinstaller genshin-damage-track.spec --noconfirm",
+            "command": "if (Test-Path .venv-build) { Remove-Item -Recurse -Force .venv-build }; $env:UV_PROJECT_ENVIRONMENT='.venv-build'; uv sync; uv run --with pyinstaller pyinstaller genshin-damage-track.spec --noconfirm",
             "group": "build",
             "problemMatcher": []
         },
