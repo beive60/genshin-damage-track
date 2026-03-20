@@ -52,8 +52,8 @@ def crop_region_of_interest(
     frame:
         Full BGR image array (H × W × 3).
     bbox:
-        Dictionary with keys ``x1``, ``y1``, ``x2``, ``y2`` (inclusive pixel
-        coordinates in FHD space).
+        Dictionary with keys ``x1``, ``y1``, ``x2``, ``y2`` (exclusive upper bounds,
+        following NumPy slicing convention: ``frame[y1:y2, x1:x2]``).
 
     Returns
     -------
