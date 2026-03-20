@@ -51,9 +51,7 @@ python -m pytest tests/ -v --cov=genshin_damage_track --cov-report=term-missing
 
 ## ローカルビルド・リリース手順
 
-物理ハードウェアトークン（コード署名用）への依存により、クラウド CI/CD 上での完全自動化が困難なため、ローカル環境でのビルド・署名・リリースの手順を以下に定義します。
-
-手動介入を最小限に抑え、ヒューマンエラーを排除するためにスクリプトベースのパイプラインを採用します。
+物理ハードウェアトークン（コード署名用）への依存により、ビルド・署名・リリースはローカル環境で実行します。
 
 ### 前提条件
 
@@ -67,105 +65,28 @@ python -m pytest tests/ -v --cov=genshin_damage_track --cov-report=term-missing
 | 物理トークン | コード署名証明書が格納されたハードウェアトークン |
 | リリースツール | [GitHub CLI (gh)](https://cli.github.com/) |
 
-### ステップ 1: 隔離環境でのビルド
+### 実行方法
 
-ホスト OS の環境汚染を防ぐため、クリーンな仮想環境上で PyInstaller を実行し、スタンドアロン実行ファイルを生成します。
+#### 一括実行（推奨）
 
-```powershell
-# クリーンなビルド用仮想環境を作成
-uv venv .venv-build
-.venv-build\Scripts\activate
-
-# 依存パッケージと PyInstaller をインストール
-uv pip install .
-uv pip install pyinstaller
-
-# スタンドアロン実行ファイルを生成
-pyinstaller --onefile --name genshin-damage-track src/genshin_damage_track/main.py
-
-# 生成物の確認
-dir dist\genshin-damage-track.exe
-```
-
-> **重要**: ビルド用の仮想環境 (`.venv-build`) は開発用 (`.venv`) とは分離してください。これにより、開発用パッケージ（pytest 等）が成果物に混入することを防ぎます。
-
-### ステップ 2: 物理トークンを用いたコード署名
-
-手動での署名操作を排除し、`signtool.exe` による CLI ベースの署名を行います。
+[`scripts/release.ps1`](scripts/release.ps1) がビルド → 署名 → リリースを順次実行します。詳細は `Get-Help .\scripts\release.ps1` を参照してください。
 
 ```powershell
-# 物理トークンが接続されていることを確認した上で実行
-signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a ".\dist\genshin-damage-track.exe"
+.\scripts\release.ps1 -Version "0.1.0"
 ```
 
-| パラメータ | 説明 |
+VS Code からは **Terminal → Run Task → Release** でも実行できます。
+
+#### 個別実行
+
+VS Code タスクで各ステップを個別に実行できます（**Terminal → Run Task**）:
+
+| タスク | 内容 |
 | --- | --- |
-| `/tr` | RFC 3161 タイムスタンプサーバーの URL |
-| `/td sha256` | タイムスタンプのダイジェストアルゴリズム |
-| `/fd sha256` | ファイルのダイジェストアルゴリズム |
-| `/a` | 適切な証明書を自動選択 |
+| **Build Executable** | `.venv-build` 上で PyInstaller ビルド |
+| **Sign Executable** | `signtool` によるコード署名 |
+| **Verify Signature** | 署名の検証 |
 
-署名の検証:
+**重要**: ビルド用の仮想環境 (`.venv-build`) は開発用 (`.venv`) とは分離されます。これにより、開発用パッケージ（pytest 等）が成果物に混入することを防ぎます。
 
-```powershell
-signtool verify /pa ".\dist\genshin-damage-track.exe"
-```
-
-### ステップ 3: GitHub CLI によるリリース
-
-Web ブラウザでの手動アップロードを廃止し、`gh` コマンドでリリースを作成します。
-
-```powershell
-# バージョンタグを作成
-git tag v0.1.0
-git push origin v0.1.0
-
-# リリースを作成し、署名済み実行ファイルをアップロード
-gh release create v0.1.0 ".\dist\genshin-damage-track.exe" --title "Release v0.1.0" --generate-notes
-```
-
-### 一括実行スクリプト
-
-上記のステップ 1〜3 を一括で実行する PowerShell スクリプトの例です。
-
-```powershell
-# release.ps1 — ローカルビルド・署名・リリースの一括実行スクリプト
-param(
-    [Parameter(Mandatory = $true)]
-    [string]$Version
-)
-
-$ErrorActionPreference = "Stop"
-
-Write-Host "=== Step 1: Build ===" -ForegroundColor Cyan
-
-# クリーンなビルド用仮想環境を作成
-if (Test-Path .venv-build) { Remove-Item -Recurse -Force .venv-build }
-uv venv .venv-build
-& .venv-build\Scripts\activate.ps1
-uv pip install .
-uv pip install pyinstaller
-pyinstaller --onefile --name genshin-damage-track src/genshin_damage_track/main.py
-
-Write-Host "=== Step 2: Sign ===" -ForegroundColor Cyan
-
-signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a ".\dist\genshin-damage-track.exe"
-signtool verify /pa ".\dist\genshin-damage-track.exe"
-
-Write-Host "=== Step 3: Release ===" -ForegroundColor Cyan
-
-git tag "v$Version"
-git push origin "v$Version"
-gh release create "v$Version" ".\dist\genshin-damage-track.exe" --title "Release v$Version" --generate-notes
-
-Write-Host "=== Done ===" -ForegroundColor Green
-Write-Host "Released v$Version successfully."
-```
-
-使用例:
-
-```powershell
-.\release.ps1 -Version "0.1.0"
-```
-
-> **注意**: 物理トークンが接続されていない状態でスクリプトを実行すると、ステップ 2 の署名処理でエラーが発生します。トークンが正しく接続されていることを確認してから実行してください。
+**注意**: 物理トークンが接続されていない状態で署名を実行するとエラーになります。

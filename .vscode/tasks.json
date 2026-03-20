@@ -47,7 +47,7 @@
         {
             "label": "Release",
             "type": "shell",
-            "command": ".\\release.ps1 -Version \"${input:version}\"",
+            "command": ".\\scripts\\release.ps1 -Version \"${input:version}\"",
             "problemMatcher": [],
             "dependsOrder": "sequence",
             "dependsOn": []
