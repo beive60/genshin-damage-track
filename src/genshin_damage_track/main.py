@@ -91,6 +91,22 @@ def extract(
         typer.echo(f"Error: video file not found: {video}", err=True)
         raise typer.Exit(code=1)
 
+    if dps_interval < 1:
+        typer.echo(f"Error: --dps-interval must be >= 1, got {dps_interval}", err=True)
+        raise typer.Exit(code=1)
+
+    if names is not None and len(names) > 4:
+        typer.echo(f"Error: --names accepts at most 4 characters, got {len(names)}", err=True)
+        raise typer.Exit(code=1)
+
+    if output is not None and not output.parent.exists():
+        typer.echo(f"Error: output directory does not exist: {output.parent}", err=True)
+        raise typer.Exit(code=1)
+
+    if plot_output is not None and not plot_output.parent.exists():
+        typer.echo(f"Error: plot-output directory does not exist: {plot_output.parent}", err=True)
+        raise typer.Exit(code=1)
+
     try:
         region_pattern = RegionPattern(pattern)
     except ValueError:
@@ -148,6 +164,14 @@ def plot(
 
     if not csv_file.exists():
         typer.echo(f"Error: CSV file not found: {csv_file}", err=True)
+        raise typer.Exit(code=1)
+
+    if dps_interval < 1:
+        typer.echo(f"Error: --dps-interval must be >= 1, got {dps_interval}", err=True)
+        raise typer.Exit(code=1)
+
+    if plot_output is not None and not plot_output.parent.exists():
+        typer.echo(f"Error: plot-output directory does not exist: {plot_output.parent}", err=True)
         raise typer.Exit(code=1)
 
     result = read_csv(csv_file, dps_interval=dps_interval)
