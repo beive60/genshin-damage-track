@@ -7,7 +7,6 @@ from pathlib import Path
 
 from genshin_damage_track.models import (
     CharacterDamage,
-    DpsRecord,
     ExtractionResult,
     FrameRecord,
     RegionPattern,
@@ -29,6 +28,10 @@ def write_csv(result: ExtractionResult, output_path: str | Path) -> None:
         Destination file path.  Parent directories must exist.
     """
     path = Path(output_path)
+
+    if not path.parent.exists():
+        raise FileNotFoundError(f"Output directory does not exist: {path.parent}")
+
     party = result.party
 
     fieldnames = ["timestamp_sec", "total_damage", "delta_damage", "dps"]
@@ -96,7 +99,12 @@ def read_csv(csv_path: str | Path, dps_interval: int = 1) -> ExtractionResult:
     """
     from genshin_damage_track.orchestrator import compute_dps  # noqa: PLC0415
 
+    if dps_interval < 1:
+        raise ValueError(f"dps_interval must be >= 1, got {dps_interval}")
+
     path = Path(csv_path)
+    if not path.exists():
+        raise FileNotFoundError(f"CSV file not found: {path}")
 
     with path.open(encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
@@ -160,8 +168,8 @@ def plot_damage(
     Two subplots are produced:
 
     1. **DPS** — overall DPS line.  When the pattern is
-       ``PER_CHARACTER`` and a party has been resolved, per-character
-       DPS lines are drawn as well.
+        ``PER_CHARACTER`` and a party has been resolved, per-character
+        DPS lines are drawn as well.
     2. **Total damage** — cumulative damage over time.
 
     Parameters
@@ -174,6 +182,11 @@ def plot_damage(
         When ``True`` the graph is shown interactively via
         ``matplotlib.pyplot.show()``.
     """
+    if output_path is not None:
+        out_path = Path(output_path)
+        if not out_path.parent.exists():
+            raise FileNotFoundError(f"Output directory does not exist: {out_path.parent}")
+
     import matplotlib.pyplot as plt  # noqa: PLC0415
     import matplotlib.ticker as ticker  # noqa: PLC0415
 
