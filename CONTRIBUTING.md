@@ -9,9 +9,7 @@
 ```powershell
 git clone https://github.com/beive60/genshin-damage-track.git
 cd genshin-damage-track
-uv venv
-.venv\Scripts\activate
-uv pip install -e ".[dev]"
+uv sync --all-extras
 ```
 
 ## 開発フロー

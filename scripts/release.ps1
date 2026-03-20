@@ -37,18 +37,17 @@ function Assert-CommandExists {
 
 try {
     Write-Host "=== 0/5: Check Prerequisites ===" -ForegroundColor Cyan
-    "uv", "pyinstaller", "signtool", "gh" | ForEach-Object { Assert-CommandExists $_ }
+    "uv", "signtool", "gh" | ForEach-Object { Assert-CommandExists $_ }
     Write-Host "All prerequisites found."
 
     Write-Host "=== 1/5: Build ===" -ForegroundColor Cyan
 
     # クリーンなビルド用仮想環境を作成
     if (Test-Path .venv-build) { Remove-Item -Recurse -Force .venv-build }
-    uv venv .venv-build
-    & .venv-build\Scripts\activate.ps1
-    uv pip install .
-    uv pip install pyinstaller
-    pyinstaller genshin-damage-track.spec --noconfirm
+    $env:UV_PROJECT_ENVIRONMENT = ".venv-build"
+    uv sync
+    uv run --with pyinstaller pyinstaller genshin-damage-track.spec --noconfirm
+    Remove-Item Env:\UV_PROJECT_ENVIRONMENT
 
     Write-Host "=== 2/5: Sign ===" -ForegroundColor Cyan
 
