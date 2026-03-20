@@ -1,0 +1,63 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Install Dev Dependencies",
+            "type": "shell",
+            "command": "uv pip install -e \".[dev]\"",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "python -m pytest tests/ -v",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Tests with Coverage",
+            "type": "shell",
+            "command": "python -m pytest tests/ -v --cov=genshin_damage_track --cov-report=term-missing",
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "Build Executable",
+            "type": "shell",
+            "command": "if (-not (Test-Path .venv-build)) { uv venv .venv-build }; & .venv-build\\Scripts\\activate.ps1; uv pip install .; uv pip install pyinstaller; pyinstaller genshin-damage-track.spec --noconfirm",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Sign Executable",
+            "type": "shell",
+            "command": "signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a \".\\dist\\genshin-damage-track.exe\"",
+            "problemMatcher": []
+        },
+        {
+            "label": "Verify Signature",
+            "type": "shell",
+            "command": "signtool verify /pa \".\\dist\\genshin-damage-track.exe\"",
+            "problemMatcher": []
+        },
+        {
+            "label": "Release",
+            "type": "shell",
+            "command": ".\\release.ps1 -Version \"${input:version}\"",
+            "problemMatcher": [],
+            "dependsOrder": "sequence",
+            "dependsOn": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "version",
+            "description": "Release version (e.g. 0.1.0)",
+            "type": "promptString"
+        }
+    ]
+}

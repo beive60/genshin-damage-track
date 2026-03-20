@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "genshin-damage-track"
+version = "0.1.0"
+description = "Extract and track damage numbers from Genshin Impact video streams"
+requires-python = ">=3.11"
+dependencies = [
+    "opencv-python>=4.9",
+    "paddleocr>=2.7,<3",
+    "paddlepaddle>=2.6,<3",
+    "setuptools",  # undeclared runtime dep of paddlepaddle (removed from stdlib in 3.12)
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
+
+[project.scripts]
+genshin-damage-track = "genshin_damage_track.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/genshin_damage_track"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
