@@ -15,7 +15,7 @@ a = Analysis(
     ['src\\genshin_damage_track\\main.py'],
     pathex=[],
     binaries=[
-        (os.path.join(_paddle_libs, '*.dll'), '.'),
+        (os.path.join(_paddle_libs, '*.dll'), 'paddle/libs'),
     ],
     datas=[
         (os.path.join(_cython_dir, 'Utility'), 'Cython/Utility'),
@@ -28,7 +28,7 @@ a = Analysis(
         (os.path.join(_paddleocr_dir, 'ppocr'), 'ppocr'),
         (os.path.join(_paddleocr_dir, 'ppstructure'), 'ppstructure'),
     ],
-    hiddenimports=[],
+    hiddenimports=['tkinter'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

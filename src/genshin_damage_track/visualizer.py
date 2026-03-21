@@ -182,6 +182,11 @@ def plot_damage(
         When ``True`` the graph is shown interactively via
         ``matplotlib.pyplot.show()``.
     """
+    # Force TkAgg backend for frozen executables, since the default interactive
+    # backend may not be available.
+    import matplotlib
+    matplotlib.use("TkAgg")
+
     if output_path is not None:
         out_path = Path(output_path)
         if not out_path.parent.exists():
