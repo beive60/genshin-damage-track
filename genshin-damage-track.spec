@@ -28,7 +28,7 @@ a = Analysis(
         (os.path.join(_paddleocr_dir, 'ppocr'), 'ppocr'),
         (os.path.join(_paddleocr_dir, 'ppstructure'), 'ppstructure'),
     ],
-    hiddenimports=[],
+    hiddenimports=['tkinter'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
