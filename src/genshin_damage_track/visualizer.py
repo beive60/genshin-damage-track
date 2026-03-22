@@ -195,6 +195,15 @@ def plot_damage(
     import matplotlib.pyplot as plt  # noqa: PLC0415
     import matplotlib.ticker as ticker  # noqa: PLC0415
 
+    # Configure Japanese font fallbacks for Windows
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.sans-serif"] = [
+        "Yu Gothic",
+        "BIZ UDGothic",
+        "Meiryo",
+        "sans-serif",
+    ]
+
     dps_records = result.dps_records
     timestamps = [r.timestamp_sec for r in dps_records]
     dps_values = [
