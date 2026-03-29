@@ -156,6 +156,16 @@ timestamp_sec,total_damage,delta_damage,dps,char_0_total_damage,char_0_delta_dam
 - OCR が失敗したフレームはスキップされ、次の成功フレームとの差分が計算されます
 - `plot` コマンドは CSV からマスターデータのみ読み取り、派生データを再計算します
 
+## クレジット表記について（任意）
+
+本ツールを使用して抽出したデータや動画・記事などを公開される際、本ツールの名前やリンクをクレジットとして記載していただけると、開発の励みになります（記載は必須ではありません）。
+
+クレジット表記例:
+
+- ダメージ計測ツール: [genshin-damage-track](https://github.com/beive60/genshin-damage-track)
+- 解析ツール使用: genshin-damage-track
+
+
 ## ライセンス
 
 [LICENSE](LICENSE) を参照してください。
