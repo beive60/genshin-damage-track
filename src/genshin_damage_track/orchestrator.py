@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 import cv2
+import numpy as np
 
 from genshin_damage_track.config import DEFAULT_DPS_INTERVAL, DEFAULT_SAMPLE_RATE, MAX_CHARACTERS, REGIONS
 from genshin_damage_track.models import (
@@ -121,7 +122,7 @@ def run_pipeline(
 
 def _extract_frame_record(
     timestamp_sec: float,
-    frame,
+    frame: np.ndarray,
     pattern: RegionPattern,
     engine: OCREngine,
     *,
